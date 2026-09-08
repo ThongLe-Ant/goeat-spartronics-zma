@@ -180,7 +180,7 @@ export default function HomePage() {
           <ErrorBlock message={error ?? "Không tải được thực đơn"} onRetry={() => reload()} />
         </div>
       ) : data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px calc(var(--safe-bottom) + 112px)", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -30, padding: "0 16px calc(var(--safe-bottom) + 112px)", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* 2. TẤM VÉ SUẤT ĂN HÔM NAY (Digital Meal Pass) */}
           <section>
             <div

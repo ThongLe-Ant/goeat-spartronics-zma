@@ -78,7 +78,7 @@ export function GreenHeader({
 
       {wave && (
         <svg
-          viewBox="0 0 390 54"
+          viewBox="0 0 390 56"
           preserveAspectRatio="none"
           aria-hidden
           style={{
@@ -88,19 +88,19 @@ export function GreenHeader({
             right: 0,
             bottom: -1,
             width: "100%",
-            height: 54,
+            height: 56,
             pointerEvents: "none",
             zIndex: 1,
           }}
         >
-          {/* Lớp sóng mờ tạo hiệu ứng khúc xạ chiều sâu sang trọng */}
+          {/* Lớp sóng lụa mờ tạo chiều sâu 3D sang trọng */}
           <path
-            d="M 0 8 C 75 38, 155 46, 235 22 C 295 6, 350 10, 390 32 L 390 54 L 0 54 Z"
-            fill="rgba(255, 255, 255, 0.09)"
+            d="M 0 16 C 110 16, 160 38, 250 38 C 320 38, 355 24, 390 24 L 390 56 L 0 56 Z"
+            fill="rgba(255, 255, 255, 0.08)"
           />
-          {/* Lớp sóng chính uốn lượn uyển chuyển hoà vào nền trang */}
+          {/* Lớp sóng chính đơn nhịp mượt mà, tiếp tuyến êm ái hoà vào nền trang */}
           <path
-            d="M 0 16 C 70 46, 150 54, 230 30 C 290 12, 345 16, 390 40 L 390 54 L 0 54 Z"
+            d="M 0 24 C 110 24, 160 46, 250 46 C 320 46, 355 32, 390 32 L 390 56 L 0 56 Z"
             fill={waveFill}
           />
         </svg>
