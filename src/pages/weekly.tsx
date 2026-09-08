@@ -58,19 +58,21 @@ export default function WeeklyPage() {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--bg-page)" }}>
-      {/* 1. ĐẦU TRANG — TINH GỌN, KHÔNG VỠ DÒNG */}
+      {/* 1. ĐẦU TRANG — BỐ TRÍ THOÁNG ĐÃNG, CHỐNG ĐÈ CAPSULE ZALO */}
       <div style={{ flexShrink: 0, padding: "calc(var(--safe-top) + 6px) 14px 8px", background: "var(--bg-surface)", borderBottom: "1px solid var(--fd-wd-line)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingRight: 88 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
-            <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 17, letterSpacing: "-0.01em", color: "var(--fg-1)", whiteSpace: "nowrap" }}>
-              Đăng ký suất ăn
-            </span>
-            <span className="tnum" style={{ fontSize: 11, fontWeight: 700, color: "var(--fd-wd-deep)", whiteSpace: "nowrap" }}>
-              ({pickedDays}/{menuDays} ngày)
-            </span>
+        {/* Hàng 1: Tiêu đề đứng độc lập bên trái, chừa 96px an toàn cho capsule Zalo bên phải */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 30, paddingRight: 96 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 18, letterSpacing: "-0.01em", color: "var(--fg-1)", whiteSpace: "nowrap" }}>
+            Đăng ký suất ăn
           </div>
+          <span className="tnum" style={{ fontSize: 11.5, fontWeight: 700, color: "var(--fd-wd-deep)" }}>
+            {pickedDays}/{menuDays} ngày đã chọn
+          </span>
+        </div>
 
-          {/* Tab Tuần này / Tuần sau siêu gọn */}
+        {/* Hàng 2: Nằm thấp dưới capsule — Có trọn vẹn 100% bề ngang cho Tab Tuần & Khoảng ngày */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 6 }}>
+          {/* Tab Tuần này / Tuần sau */}
           <div role="tablist" style={{ display: "inline-flex", gap: 2, padding: 2, borderRadius: 999, background: "var(--fd-wd-track)", flexShrink: 0 }}>
             {(["this", "next"] as WeekTab[]).map((t) => {
               const on = tab === t;
@@ -83,11 +85,11 @@ export default function WeeklyPage() {
                   aria-selected={on}
                   onClick={() => setTab(t)}
                   style={{
-                    padding: "4px 10px",
+                    padding: "4px 11px",
                     borderRadius: 999,
                     border: "none",
                     font: "inherit",
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: 700,
                     whiteSpace: "nowrap",
                     background: on ? "var(--fd-wd-solid)" : "transparent",
@@ -96,12 +98,12 @@ export default function WeeklyPage() {
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 3,
+                    gap: 4,
                   }}
                 >
                   {t === "this" ? "Tuần này" : "Tuần sau"}
                   {n > 0 && (
-                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: "0 4px", borderRadius: 999, background: on ? "rgba(255,255,255,0.25)" : "var(--bg-surface)", color: on ? "#fff" : "var(--fd-wd-deep)" }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: "0 5px", borderRadius: 999, background: on ? "rgba(255,255,255,0.25)" : "var(--bg-surface)", color: on ? "#fff" : "var(--fd-wd-deep)" }}>
                       {n}
                     </span>
                   )}
@@ -109,9 +111,13 @@ export default function WeeklyPage() {
               );
             })}
           </div>
+
+          <span className="tnum" style={{ fontSize: 11.5, fontWeight: 600, color: "var(--fg-3)" }}>
+            {weekRangeLabel(days)}
+          </span>
         </div>
 
-        {/* Dải chọn ngày T2 -> T7 / CN */}
+        {/* Hàng 3: Dải chọn ngày T2 -> T7 / CN */}
         {days.length > 0 && (
           <div style={{ display: "flex", gap: 5, marginTop: 8 }}>
             {days.map((d) => {
