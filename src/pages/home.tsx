@@ -145,11 +145,15 @@ export default function HomePage() {
       </GreenHeader>
 
       {status === "loading" && !data ? (
-        <LoadingBlock rows={3} />
+        <div style={{ position: "relative", zIndex: 2, marginTop: -26, padding: "0 16px 28px" }}>
+          <LoadingBlock rows={3} />
+        </div>
       ) : status === "error" && !data ? (
-        <ErrorBlock message={error ?? "Không tải được thực đơn"} onRetry={() => reload()} />
+        <div style={{ position: "relative", zIndex: 2, marginTop: -26, padding: "0 16px 28px" }}>
+          <ErrorBlock message={error ?? "Không tải được thực đơn"} onRetry={() => reload()} />
+        </div>
       ) : data ? (
-        <div style={{ padding: "0 16px 28px", marginTop: 8, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -26, padding: "0 16px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* 2. TẤM VÉ SUẤT ĂN HÔM NAY (Digital Meal Pass) */}
           <section>
             <div
@@ -158,7 +162,7 @@ export default function HomePage() {
                 border: "1px solid var(--ge-sage-line)",
                 borderRadius: 20,
                 overflow: "hidden",
-                boxShadow: "var(--ge-shadow-lift)",
+                boxShadow: "0 8px 24px -4px rgba(10, 50, 32, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04)",
               }}
             >
               {/* Dải tiêu đề thẻ */}
