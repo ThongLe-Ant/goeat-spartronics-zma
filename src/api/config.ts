@@ -13,6 +13,14 @@ export function getToken(): string | null {
     return null;
   }
 }
+/** Dọn mọi dữ liệu cục bộ của app (token, client_id quầy, kho đơn mock) khi đăng xuất. */
+export function clearLocalData() {
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith("goeat.")) localStorage.removeItem(k);
+  } catch {
+    /* private mode */
+  }
+}
 export function setToken(t: string | null) {
   try {
     if (t) localStorage.setItem(TOKEN_KEY, t);

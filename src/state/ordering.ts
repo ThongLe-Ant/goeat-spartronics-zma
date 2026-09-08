@@ -2,7 +2,7 @@
 // Port từ spartronics ordering-client-page.tsx: mỗi lần chạm là một lần lưu,
 // lạc quan (optimistic), xếp hàng tuần tự, lỗi thì hoàn về giá trị cũ.
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import { batchOrder, fetchBootstrap, fetchWeekMenu } from "@/api/ordering";
 import type { Bootstrap, OrderingFoodItem, WeeklyDay, WeeklyMenuData, WeeklyShift } from "@/api/types";
@@ -58,10 +58,6 @@ export function useWeekMenu() {
   const saving = useAtomValue(savingAtom);
   const setSaving = useSetAtom(savingAtom);
   const [savedFlash, setSavedFlash] = useAtom(savedFlashAtom);
-  // ref để callback luôn thấy dữ liệu mới nhất (revert đúng giá trị).
-  const dataRef = useRef(data);
-  dataRef.current = data;
-
   const load = useCallback(
     async (silent = false) => {
       if (!silent) setStatus("loading");
@@ -90,8 +86,6 @@ export function useWeekMenu() {
   /** Ghi một ô: lạc quan ➝ server ➝ lỗi thì hoàn. */
   const persist = useCallback(
     (day: WeeklyDay, shiftId: number, next: number | null) => {
-      const prevLine = day.orders[shiftId];
-      const prevEnt = day.entitlements?.[shiftId];
       const k = cellKey(day.date, shiftId);
 
       setData((cur) =>
@@ -127,21 +121,9 @@ export function useWeekMenu() {
           setSavedFlash((f) => ({ ...f, [k]: Date.now() }));
           setTimeout(() => setSavedFlash((f) => (f[k] ? { ...f, [k]: 0 } : f)), 2200);
         } catch (e: any) {
-          // Hoàn về giá trị trước khi chạm.
-          setData((cur) =>
-            cur &&
-            patchDay(cur, day.date, (d) => {
-              const orders = { ...d.orders };
-              const entitlements = { ...(d.entitlements ?? {}) };
-              if (prevLine == null) delete orders[shiftId];
-              else orders[shiftId] = prevLine;
-              if (prevEnt == null) delete entitlements[shiftId];
-              else entitlements[shiftId] = prevEnt;
-              return { ...d, orders, entitlements };
-            }),
-          );
           toast.error(e?.message ?? "Lưu không thành công");
-          // Có thể ô vừa bị khoá — tải lại để lưới phản ánh đúng.
+          // Không hoàn tay bằng giá trị cũ trong closure: nếu NV đã bấm sang món khác,
+          // lệnh hoàn của request cũ sẽ xoá mất lựa chọn mới. Nạp lại là nguồn đúng duy nhất.
           void load(true);
         } finally {
           setSaving((s) => {

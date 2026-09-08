@@ -31,7 +31,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   const text = await res.text();
   let json: any = null;
   try {
-    json = text ? JSON.parse(text) : null;
+    json = text ? JSON.parse(text) : {};
   } catch {
     json = { message: text };
   }

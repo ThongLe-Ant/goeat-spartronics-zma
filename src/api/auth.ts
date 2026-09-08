@@ -4,7 +4,7 @@
 // Lần đầu (SĐT chưa có trong HR) BFF trả 404 NEED_LINK ➝ NV nhập mã NV để liên kết.
 import { getAccessToken, getPhoneNumber } from "zmp-sdk/apis";
 import { ApiError, api } from "./client";
-import { API_MODE, setToken } from "./config";
+import { API_MODE, clearLocalData, setToken } from "./config";
 import type { AuthErrorCode, LoginResult } from "./types";
 
 /** Mã NV để đăng nhập thẳng khi thử live ngoài Zalo (BFF phải bật ZMA_DEV_LOGIN=1). */
@@ -46,4 +46,5 @@ export async function linkEmployee(employeeCode: string): Promise<LoginResult> {
 
 export function logout() {
   setToken(null);
+  clearLocalData();
 }

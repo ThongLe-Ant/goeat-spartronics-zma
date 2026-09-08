@@ -2,7 +2,7 @@
 // Quét: thẻ của chính NV mẫu (MOCK_EMPLOYEE) đọc từ kho đơn localStorage; vài
 // thẻ đồng nghiệp mẫu để thử luồng "phát thành công"/"đã nhận"/"không có suất".
 import type { KitchenBoard, KitchenShift, ScanOutcome, ScanServed } from "../types";
-import { MEAL_TIMES, MOCK_EMPLOYEE, dishesFor, key, load, save } from "./ordering.mock";
+import { MEAL_TIMES, MOCK_EMPLOYEE, dishesFor, effectiveOrder, key, load, save } from "./ordering.mock";
 import { hmToMin, hmVN, weekdayIndex, ymdVN } from "@/lib/date-vn";
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -40,11 +40,13 @@ export async function mockScan(scanValue: string): Promise<ScanOutcome> {
   // Thẻ của chính NV mẫu — đọc đơn thật trong kho mock.
   if (v === MOCK_EMPLOYEE.card_number || v === MOCK_EMPLOYEE.employee_code.toUpperCase()) {
     const orders = load();
-    const o = orders[key(today, mt.id)];
+    // Không chọn món vẫn được nhận suất mặc định — ghi nhận vào kho ngay lúc phát.
+    const o = effectiveOrder(today, mt.id);
+    if (o) orders[key(today, mt.id)] = o;
     const details = { employee_code: MOCK_EMPLOYEE.employee_code, employee_name: MOCK_EMPLOYEE.full_name, department: MOCK_EMPLOYEE.department, ...base };
     if (!o || o.entitlement === "none") return { kind: "denied", result: "no_order", message: `Không có suất ${mt.name} hôm nay.`, details, duplicate: false };
     const dish = dishesFor(today, mt.id).find((d) => d.menu_line_id === o.menu_line_id);
-    if (o.picked_up) return { kind: "denied", result: "already_picked", message: `Suất ${mt.name} đã được nhận lúc ${(o.pickup_time ?? "").slice(11, 16)}.`, details: { ...details, food_name: dish?.name }, duplicate: false };
+    if (o.picked_up) return { kind: "denied", result: "already_picked", message: `Suất ${mt.name} đã được nhận lúc ${o.pickup_time ? hmVN(new Date(o.pickup_time)) : "—"}.`, details: { ...details, food_name: dish?.name }, duplicate: false };
     o.picked_up = true;
     o.pickup_time = new Date().toISOString();
     save();

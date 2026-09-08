@@ -14,7 +14,7 @@ import type {
   WeeklyMenuData,
   WeeklyShift,
 } from "../types";
-import { addDays, dayKind, hmToMin, hmVN, mondayOf, weekdayIndex, ymdVN } from "@/lib/date-vn";
+import { addDays, dayKind, hmToMin, mondayOf, weekdayIndex, ymdVN } from "@/lib/date-vn";
 import { isLockedAt, lockClock, lockLeadDays } from "@/lib/ordering-lock";
 
 const DEADLINE_HOURS = 48;
@@ -77,7 +77,7 @@ export function dishesFor(date: string, shiftId: number): OrderingFoodItem[] {
 
 // ---- Kho đơn (localStorage) ---------------------------------------------------
 export type StoredOrder = { menu_line_id: number; entitlement: Entitlement; picked_up?: boolean; pickup_time?: string | null };
-const STORE_KEY = "goeat.mock.orders.v1";
+const STORE_KEY = `goeat.mock.orders.v1.${MOCK_EMPLOYEE.employee_code}`;
 let store: Record<string, StoredOrder> | null = null;
 export const key = (date: string, shiftId: number) => `${date}|${shiftId}`;
 
@@ -197,6 +197,21 @@ export async function mockBatchOrder(input: BatchOrderInput): Promise<BatchOrder
 }
 
 const serveWindow = (mt: (typeof MEAL_TIMES)[number]) => `${mt.start_time}–${mt.end_time}`;
+/** Suất NV nhận nếu không chọn — cùng quy tắc với autoDishOf() ở state/ordering.ts. */
+const autoDish = (dishes: OrderingFoodItem[]) => (dishes.length === 0 ? null : dishes.find((d) => d.isDefault) ?? dishes[0]);
+
+/**
+ * Suất HIỆU LỰC của một ô: đơn NV đã chọn, hoặc suất mặc định nếu không chọn.
+ * Thẻ QR và máy quét ở quầy đều đọc qua đây để không lệch nhau.
+ * Ca "ngoài ca làm việc" và Chủ nhật thì không có suất.
+ */
+export function effectiveOrder(date: string, shiftId: number): StoredOrder | null {
+  const o = load()[key(date, shiftId)];
+  if (o) return o;
+  if (dayKind(date) === "sun" || (ROSTER[shiftId] ?? "none") === "none") return null;
+  const dish = autoDish(dishesFor(date, shiftId));
+  return dish ? { menu_line_id: dish.menu_line_id, entitlement: ROSTER[shiftId] } : null;
+}
 const minToHm = (min: number) => `${String(Math.floor(((min % 1440) + 1440) % 1440 / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
 export async function mockPickupCard(): Promise<PickupCardData> {
@@ -205,16 +220,17 @@ export async function mockPickupCard(): Promise<PickupCardData> {
   const orders = load();
   const meals: PickupCardData["meals"] = [];
   for (const mt of MEAL_TIMES) {
-    const o = orders[key(today, mt.id)];
+    const o = effectiveOrder(today, mt.id);
     if (!o) continue;
     const dish = dishesFor(today, mt.id).find((d) => d.menu_line_id === o.menu_line_id);
+    if (!dish) continue;
     meals.push({
       meal_time_id: mt.id,
       meal_time_name: mt.name,
       serve_window: serveWindow(mt),
       open_from: minToHm(hmToMin(mt.start_time) - PICKUP_MINUTES),
       open_to: mt.end_time,
-      food_name: dish?.name ?? null,
+      food_name: dish.name,
       entitlement: o.entitlement,
       picked_up: !!o.picked_up,
       pickup_time: o.pickup_time ?? null,
@@ -226,16 +242,16 @@ export async function mockPickupCard(): Promise<PickupCardData> {
 export async function mockOrderHistory(): Promise<OrderHistoryItem[]> {
   await delay(150);
   const orders = load();
-  const today = ymdVN();
-  const nowHm = hmVN();
   return Object.entries(orders)
     .map(([k, o]) => {
       const [date, sid] = k.split("|");
-      const mt = MEAL_TIMES.find((m) => m.id === Number(sid))!;
+      // Ca có thể bị gỡ khỏi cấu hình — bỏ qua thay vì ném lỗi làm trắng màn lịch sử.
+      const mt = MEAL_TIMES.find((m) => m.id === Number(sid));
+      if (!mt) return null;
       const dish = dishesFor(date, mt.id).find((d) => d.menu_line_id === o.menu_line_id);
-      const done = date < today || (date === today && nowHm > mt.end_time);
-      return { meal_date: date, meal_time_id: mt.id, meal_time_name: mt.name, serve_window: serveWindow(mt), food_name: dish?.name ?? "—", entitlement: o.entitlement, picked_up: !!o.picked_up && done, pickup_time: done ? o.pickup_time ?? null : null };
+      return { meal_date: date, meal_time_id: mt.id, meal_time_name: mt.name, serve_window: serveWindow(mt), food_name: dish?.name ?? "—", entitlement: o.entitlement, picked_up: !!o.picked_up, pickup_time: o.pickup_time ?? null };
     })
+    .filter((x): x is OrderHistoryItem => x !== null)
     .sort((a, b) => (a.meal_date === b.meal_date ? a.meal_time_id - b.meal_time_id : a.meal_date < b.meal_date ? 1 : -1));
 }
 

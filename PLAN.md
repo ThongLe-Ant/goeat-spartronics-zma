@@ -536,3 +536,31 @@ phần có dấu ▶ là **đã tái hiện được trên trình duyệt**.
 8. Dọn: `dataRef`, `find(...)!`, `STORE_KEY` gắn mã NV, `logout()` xoá `client_id`.
 
 Ảnh: `.playwright-mcp/audit-{1..8}-*.png`.
+
+## 11.4 Sửa lỗi chức năng 2026-09-08 (từ audit §11.3)
+
+Đã sửa và kiểm chứng lại trên trình duyệt (dùng `page.clock` ghim 11:35 giờ VN
+để rơi đúng vào Ca 1). `npx tsc --noEmit` sạch, 0 lỗi console trên 9 route.
+
+| Tệp | Sửa gì |
+| --- | --- |
+| `api/mock/staff.mock.ts` | giờ nhận cơm: `.slice(11,16)` (ISO=UTC) ➝ `hmVN(new Date(...))`; quầy phát công nhận **suất mặc định** qua `effectiveOrder()` |
+| `api/mock/ordering.mock.ts` | thêm `effectiveOrder(date, shiftId)` — nguồn duy nhất cho "đơn đã chọn **hoặc** suất mặc định"; `mockPickupCard` dùng lại nó; `picked_up`/`pickup_time` bỏ điều kiện `&& done`; bỏ `MEAL_TIMES.find(...)!`; `STORE_KEY` gắn mã NV |
+| `state/ordering.ts` | bỏ rollback bằng `prevLine`/`prevEnt` trong closure (ghi đè lựa chọn mới khi bấm nhanh + rớt mạng) — chỉ `void load(true)`; xoá `dataRef` thừa |
+| `api/client.ts` | body rỗng trả `{}` thay vì `null` (chặn crash `batchOrder`) |
+| `router.tsx` + `components/footer.tsx` | thêm route `/admin/profile` (`nav: "admin"`), `ADMIN_TABS` trỏ vào đó — nhân sự bếp không còn kẹt sang nav nhân viên |
+| `api/config.ts` + `api/auth.ts` | `clearLocalData()` xoá mọi khoá `goeat.*`; `logout()` gọi nó |
+
+**KHÔNG sửa** `api/ordering.ts:9` (`fetchBootstrap` không bóc `.data`): đã đối
+chiếu BFF — `tanloc-spartronics/src/app/api/zma/bootstrap/route.ts` trả
+`NextResponse.json(await getZmaBootstrap(employee))` ở gốc, khác `/ticket` bọc
+`{ data }`. Mã hiện tại **đúng**; đây là báo động nhầm của agent.
+
+**Còn nợ (chưa làm, chờ quyết định):**
+- Ca vắt qua nửa đêm: `ordering-lock.ts:19` `mealStartMs` và so sánh chuỗi
+  `nowHm > end_time` đều sai nếu có ca 00:xx. Hiện 3 ca đều trong ngày nên chưa lộ.
+- UI không tự khoá ô khi ngồi im qua giờ chốt (chỉ báo lỗi lúc bấm).
+- Dock điều hướng `background: "transparent"` (`footer.tsx`) chìm trên nền xanh
+  của màn `/qr` — lỗi thiết kế, chưa đụng vì tệp đang được sửa song song.
+
+Ảnh: `.playwright-mcp/fix-{qr,scan-dup,orders2,adminprofile,weekly-persist}.png`.

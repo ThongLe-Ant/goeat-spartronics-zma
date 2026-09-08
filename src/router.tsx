@@ -33,6 +33,7 @@ const router = createBrowserRouter(
         { path: "/admin", element: <Navigate to="/admin/scan" replace /> },
         { path: "/admin/scan", element: <ScanPage />, handle: { nav: "admin" } },
         { path: "/admin/kitchen", element: <KitchenPage />, handle: { nav: "admin" } },
+        { path: "/admin/profile", element: <ProfilePage />, handle: { nav: "admin" } },
 
         { path: "*", element: <NotFound /> },
       ],

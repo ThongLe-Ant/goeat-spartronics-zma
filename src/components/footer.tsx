@@ -27,7 +27,7 @@ const EMP_TABS: Tab[] = [
 const ADMIN_TABS: Tab[] = [
   { id: "s-scan", label: "Quét thẻ", icon: "scan", path: "/admin/scan" },
   { id: "s-kitchen", label: "Bếp", icon: "bowl", path: "/admin/kitchen" },
-  { id: "s-profile", label: "Cá nhân", icon: "user", path: "/profile" },
+  { id: "s-profile", label: "Cá nhân", icon: "user", path: "/admin/profile" },
 ];
 
 /** Tạo đường path SVG cho thanh dock có vết khuyết chữ U uốn cong mượt mà ở giữa */
