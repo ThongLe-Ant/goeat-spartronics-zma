@@ -34,16 +34,41 @@ export default function HomePage() {
     [data, todayDay],
   );
 
-  // Ca đang xem: ca đã có suất ➝ ca còn mở ➝ ca đầu.
+  // Danh sách các ca mà nhân viên CÓ SUẤT ĂN HÔM NAY (đã đặt hoặc có suất cấp từ backend)
+  const registeredShifts = useMemo(() => {
+    if (!todayDay || !data) return [];
+    return openShifts.filter((s) => {
+      const hasOrder = todayDay.orders[s.id] != null;
+      const m = card.data?.meals.find((x) => x.meal_time_id === s.id);
+      const hasMeal = !!m?.food_name && m.entitlement !== "none";
+      return hasOrder || hasMeal;
+    });
+  }, [openShifts, todayDay, data, card.data?.meals]);
+
+  // Các ca hiển thị trên tấm vé hôm nay:
+  // - Nếu đã có suất (1 hoặc 2 ca): CHỈ HIỂN THỊ CÁC CA ĐÃ ĐẶT NÀY (tối đa 2 ca theo quy định nhà máy: 1 suất chính + 1 tăng ca, tuyệt đối không hiện cả 3 ca)
+  // - Nếu chưa đặt ca nào:
+  //    + Nếu còn ca mở: hiển thị ca mở để nhân viên chọn món (tối đa 2 ca)
+  //    + Nếu đều đã khoá: hiển thị 1 ca đại diện
+  const displayShifts = useMemo(() => {
+    if (registeredShifts.length > 0) {
+      return registeredShifts.slice(0, 2);
+    }
+    const openToOrder = openShifts.filter((s) => todayDay && !isCellLocked(todayDay, s.id));
+    if (openToOrder.length > 0) return openToOrder.slice(0, 2);
+    return openShifts.slice(0, 1);
+  }, [registeredShifts, openShifts, todayDay, isCellLocked]);
+
+  // Ca đang xem: ưu tiên ca có suất ➝ ca còn mở ➝ ca đầu.
   const preferred =
-    openShifts.find((s) => todayDay?.orders[s.id] != null)?.id ??
-    openShifts.find((s) => todayDay && !isCellLocked(todayDay, s.id))?.id ??
+    registeredShifts[0]?.id ??
+    displayShifts[0]?.id ??
     openShifts[0]?.id ??
     0;
   const [active, setActive] = useState<number>(preferred);
   useEffect(() => {
-    if (!openShifts.some((s) => s.id === active)) setActive(preferred);
-  }, [openShifts, active, preferred]);
+    if (!displayShifts.some((s) => s.id === active)) setActive(preferred);
+  }, [displayShifts, active, preferred]);
 
   const shift = openShifts.find((s) => s.id === active) ?? null;
   const dishes = useMemo(() => sortDishes(todayDay?.menus[active] ?? []), [todayDay, active]);
@@ -58,8 +83,10 @@ export default function HomePage() {
   // Suất hôm nay của ca đang xem (tên món, khung giờ phát, đã nhận chưa).
   const meal = card.data?.meals.find((m) => m.meal_time_id === active) ?? null;
   const pickedDish = picked != null ? dishes.find((d) => d.menu_line_id === picked) ?? null : null;
-  const todayDishName = pickedDish?.name ?? meal?.food_name ?? (autoDish?.name ?? null);
-  const hasPortion = picked != null ? entitlement !== "none" : !!meal?.food_name && meal.entitlement !== "none";
+  const isPickedDish = picked != null;
+  const isDefaultPortion = !isPickedDish && (!!meal?.food_name || (entitlement != null && entitlement !== "none"));
+  const hasPortion = isPickedDish || isDefaultPortion || (!!meal?.food_name && meal.entitlement !== "none");
+  const todayDishName = pickedDish?.name ?? meal?.food_name ?? (hasPortion || !locked ? autoDish?.name ?? null : null);
   const isPickedUp = !!meal?.picked_up;
 
   // Cảnh báo hạn chốt thông minh: tìm ca sắp khoá gần nhất mà nhân viên chưa chọn món
@@ -153,7 +180,7 @@ export default function HomePage() {
           <ErrorBlock message={error ?? "Không tải được thực đơn"} onRetry={() => reload()} />
         </div>
       ) : data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px calc(var(--safe-bottom) + 88px)", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px calc(var(--safe-bottom) + 112px)", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* 2. TẤM VÉ SUẤT ĂN HÔM NAY (Digital Meal Pass) */}
           <section>
             <div
@@ -254,10 +281,10 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <>
-                    {/* Bộ chuyển ca — chuẩn style trang đặt món (ShiftChips): viên xanh đặc tươi và nét */}
-                    {openShifts.length > 1 && (
+                    {/* Bộ chuyển ca — CHỈ HIỂN THỊ KHI CÓ TỪ 2 CA TRỞ LÊN (tối đa 2 ca: Ca chính + Ca tăng ca) */}
+                    {displayShifts.length > 1 && (
                       <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-                        {openShifts.map((s) => {
+                        {displayShifts.map((s) => {
                           const on = s.id === active;
                           const m = card.data?.meals.find((x) => x.meal_time_id === s.id);
                           const hasS = todayDay.orders[s.id] != null || (!!m?.food_name && m.entitlement !== "none");
@@ -319,11 +346,11 @@ export default function HomePage() {
                           </>
                         )}
                       </div>
-                      <StatusBadge state={isPickedUp ? "done" : hasPortion ? "ordered" : todayDishName && !locked ? "auto" : "none"} />
+                      <StatusBadge state={isPickedUp ? "done" : isPickedDish ? "ordered" : isDefaultPortion ? "auto" : "none"} />
                     </div>
 
                     {/* TRƯỜNG HỢP 1: ĐÃ CÓ SUẤT ĂN */}
-                    {hasPortion || todayDishName ? (
+                    {hasPortion || (todayDishName && !locked) ? (
                       <>
                         {/* Chi tiết món ăn */}
                         <div
@@ -508,10 +535,10 @@ export default function HomePage() {
                           </span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14.5, color: "var(--fg-2)" }}>
-                              Chưa có suất ăn ca này
+                              {locked ? "Hôm nay không có suất ăn" : "Chưa chọn món hôm nay"}
                             </div>
                             <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 2, lineHeight: 1.4 }}>
-                              {locked ? "Ca này đã chốt đổi món (trước 48h) và không có suất đăng ký." : "Bạn chưa chọn món cho ca này. Hãy chọn ở bên dưới."}
+                              {locked ? "Hôm nay đã qua hạn chốt suất và bạn chưa đăng ký món." : "Ca ăn hôm nay vẫn còn mở. Hãy chọn món ở bên dưới để bếp phục vụ bạn."}
                             </div>
                           </div>
                         </div>

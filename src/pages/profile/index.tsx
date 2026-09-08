@@ -114,7 +114,7 @@ export default function ProfilePage() {
         </div>
       ))}
 
-      <div style={{ padding: "20px 16px calc(var(--safe-bottom) + 88px)" }}>
+      <div style={{ padding: "20px 16px calc(var(--safe-bottom) + 112px)" }}>
         <Btn
           full
           variant="danger"

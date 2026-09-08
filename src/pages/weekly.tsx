@@ -123,9 +123,35 @@ export default function WeeklyPage() {
             })}
           </div>
 
-          <span className="tnum" style={{ fontSize: 11.5, fontWeight: 600, color: "var(--fg-3)" }}>
-            {weekRangeLabel(days)}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span className="tnum" style={{ fontSize: 11.5, fontWeight: 600, color: "var(--fg-3)" }}>
+              {weekRangeLabel(days)}
+            </span>
+            {clearable && (
+              <button
+                type="button"
+                onClick={onClearWeek}
+                title="Bỏ chọn các ca còn mở trong tuần"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 3,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  padding: "3px 8px",
+                  borderRadius: 999,
+                  font: "inherit",
+                  border: `1px solid ${confirmClear ? "var(--fd-lock)" : "var(--border-default)"}`,
+                  background: confirmClear ? "color-mix(in srgb, var(--fd-lock) 10%, var(--bg-surface))" : "var(--bg-page)",
+                  color: confirmClear ? "var(--fd-lock)" : "var(--fg-3)",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <I.trash size={11} /> {confirmClear ? "Xác nhận?" : "Xoá tuần"}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Hàng 3: Dải chọn ngày T2 -> T7 / CN — Nổi bật T7 (Vàng) và CN (Đỏ) theo Spartronics */}
@@ -227,7 +253,7 @@ export default function WeeklyPage() {
       </div>
 
       {/* 2. VÙNG TRUNG TÂM — TỰ NHIÊN, KHÔNG BỊ CẮT ĐẦU ĐUÔI */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 14px 14px" }} className="no-scrollbar">
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 14px calc(var(--safe-bottom) + 96px)" }} className="no-scrollbar">
         {status === "loading" && !data ? (
           <LoadingBlock />
         ) : status === "error" && !data ? (
@@ -251,27 +277,6 @@ export default function WeeklyPage() {
           </div>
         )}
       </div>
-
-      {/* 3. THANH TỔNG ĐÁY TRANG */}
-      {data && (
-        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 12, padding: "8px 16px 10px", background: "var(--bg-surface)", borderTop: "1px solid var(--fd-wd-line)" }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 16, color: "var(--fg-1)" }}>
-              <span style={{ color: total > 0 ? "var(--fd-wd-deep)" : "var(--fg-1)" }}>{total} suất</span>
-              <span style={{ fontWeight: 500, fontSize: 12, color: "var(--fg-3)", marginLeft: 6 }}>{tab === "this" ? "tuần này" : "tuần sau"}</span>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--fg-4)" }}>Chạm món để lưu · Không chọn = nhận suất mặc định</div>
-          </div>
-          {clearable && (
-            <button
-              onClick={onClearWeek}
-              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 700, padding: "6px 11px", borderRadius: 999, font: "inherit", border: `1.5px solid ${confirmClear ? "var(--fd-lock)" : "var(--border-default)"}`, background: confirmClear ? "color-mix(in srgb, var(--fd-lock) 10%, var(--bg-surface))" : "transparent", color: confirmClear ? "var(--fd-lock)" : "var(--fg-2)", cursor: "pointer", whiteSpace: "nowrap" }}
-            >
-              <I.trash size={13} /> {confirmClear ? "Xác nhận xoá" : "Xoá tuần"}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }
