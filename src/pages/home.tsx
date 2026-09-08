@@ -192,15 +192,15 @@ export default function HomePage() {
                 boxShadow: "0 14px 34px -6px rgba(10, 45, 30, 0.18), 0 3px 10px rgba(0, 0, 0, 0.04)",
               }}
             >
-              {/* Dải tiêu đề thẻ — Nền kem vani ấm áp + Icon Cam Hổ Phách tương phản nổi bật trên nền xanh */}
+              {/* Dải tiêu đề thẻ — Trắng sứ tinh khiết chuẩn luxury pass */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 9,
-                  padding: "12px 15px",
-                  background: "linear-gradient(135deg, #FFFDF7 0%, #FFF5E6 100%)",
-                  borderBottom: "1px solid #F2E5CE",
+                  gap: 10,
+                  padding: "13px 16px",
+                  background: "#ffffff",
+                  borderBottom: "1px solid #F1F5F9",
                 }}
               >
                 <span
@@ -210,16 +210,16 @@ export default function HomePage() {
                     justifyContent: "center",
                     width: 30,
                     height: 30,
-                    borderRadius: 10,
-                    background: "linear-gradient(135deg, #FF7A00 0%, #EA580C 100%)",
-                    color: "#fff",
+                    borderRadius: 9,
+                    background: "linear-gradient(135deg, #0D4D33 0%, #176544 100%)",
+                    color: "#E2BA5D",
                     flexShrink: 0,
-                    boxShadow: "0 3px 8px -1px rgba(234, 88, 12, 0.4)",
+                    boxShadow: "0 2px 6px rgba(13, 77, 51, 0.25)",
                   }}
                 >
-                  <I.utensils size={16} sw={2.2} />
+                  <I.utensils size={15} sw={2.2} />
                 </span>
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15, letterSpacing: "-0.01em", color: "#1E293B" }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15, letterSpacing: "-0.015em", color: "#0F172A" }}>
                   Suất ăn hôm nay
                 </span>
                 <span className="tnum" style={{ marginLeft: "auto", fontSize: 12, fontWeight: 600, color: "#64748B" }}>
@@ -306,10 +306,10 @@ export default function HomePage() {
                                 fontWeight: 700,
                                 fontSize: 13,
                                 whiteSpace: "nowrap",
-                                background: on ? "var(--fd-wd-solid)" : "var(--bg-surface)",
-                                color: on ? "var(--fd-wd-on-solid)" : "var(--fg-2)",
-                                border: on ? "1px solid transparent" : "1px solid var(--border-default)",
-                                boxShadow: on ? "0 2px 6px -1px rgba(20,114,76,0.35)" : "none",
+                                background: on ? "linear-gradient(180deg, #0D4D33 0%, #0A3C28 100%)" : "#F8FAFC",
+                                color: on ? "#ffffff" : "#475569",
+                                border: on ? "1px solid transparent" : "1px solid #E2E8F0",
+                                boxShadow: on ? "0 2px 8px rgba(10, 60, 40, 0.3)" : "none",
                                 transition: "background 140ms ease, color 140ms ease",
                               }}
                             >
@@ -320,12 +320,12 @@ export default function HomePage() {
                                     width: 5,
                                     height: 5,
                                     borderRadius: 999,
-                                    background: on ? "var(--fd-wd-on-solid)" : "var(--fd-wd-solid)",
+                                    background: on ? "#ffffff" : "#0D4D33",
                                   }}
                                 />
                               )}
                               {cellLocked && (
-                                <span style={{ display: "flex", color: on ? "var(--fd-wd-on-solid)" : "var(--fd-lock)" }}>
+                                <span style={{ display: "flex", color: on ? "#ffffff" : "var(--fd-lock)" }}>
                                   <I.lock size={11} />
                                 </span>
                               )}
@@ -340,7 +340,7 @@ export default function HomePage() {
                       <div className="tnum" style={{ fontSize: 12, fontWeight: 600, color: "var(--fg-2)", display: "flex", alignItems: "center", gap: 5 }}>
                         {shift && (
                           <>
-                            <span style={{ fontWeight: 700, color: "var(--fd-wd-deep)" }}>{shift.name}</span>
+                            <span style={{ fontWeight: 700, color: "#0F172A" }}>{shift.name}</span>
                             <span>·</span>
                             <I.clock size={12} sw={2.2} style={{ color: "var(--fd-accent-ink)" }} />
                             <span>Phát cơm {meal?.serve_window ?? `${shift.start_time}–${shift.end_time}`}</span>
@@ -362,8 +362,8 @@ export default function HomePage() {
                             gap: 12,
                             padding: "12px 14px",
                             borderRadius: 16,
-                            background: isPickedUp ? "var(--ge-done-bg)" : "linear-gradient(135deg, #FFFDF8 0%, #FFF8EE 100%)",
-                            border: `1px solid ${isPickedUp ? "var(--ge-done-line)" : "#F2E4CD"}`,
+                            background: isPickedUp ? "var(--ge-done-bg)" : "#F8FAFC",
+                            border: `1px solid ${isPickedUp ? "var(--ge-done-line)" : "#E2E8F0"}`,
                           }}
                         >
                           <span
@@ -373,14 +373,15 @@ export default function HomePage() {
                               justifyContent: "center",
                               width: 44,
                               height: 44,
-                              borderRadius: 14,
+                              borderRadius: 13,
                               flexShrink: 0,
                               background: "#FFFFFF",
-                              color: pickedDish ? dishLook(pickedDish).ink : "#EA580C",
-                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                              color: "#0D4D33",
+                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                              border: "1px solid #EEF2F6",
                             }}
                           >
-                            <I.utensils size={22} sw={2} />
+                            <I.utensils size={21} sw={2} />
                           </span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <DishTitle name={todayDishName!} />
@@ -446,32 +447,33 @@ export default function HomePage() {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: 14,
-                                padding: "10px 12px",
-                                borderRadius: 14,
-                                background: "var(--bg-surface)",
-                                border: "1px dashed var(--teal-300)",
+                                padding: "12px 14px",
+                                borderRadius: 16,
+                                background: "#F8FAFC",
+                                border: "1px solid #E2E8F0",
                                 cursor: "pointer",
                               }}
                             >
                               <div
                                 style={{
                                   padding: 4,
-                                  background: "#fff",
-                                  borderRadius: 8,
-                                  border: "1px solid var(--ge-sage-line)",
+                                  background: "#ffffff",
+                                  borderRadius: 10,
+                                  border: "1px solid #E2E8F0",
+                                  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.04)",
                                   flexShrink: 0,
                                 }}
                               >
                                 <QRCode value={qrScanValue} size={64} fg="#0D4D33" />
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--fd-wd-deep)", display: "flex", alignItems: "center", gap: 4 }}>
-                                  Mã nhận cơm tại quầy <I.chevR size={14} />
+                                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0F172A", display: "flex", alignItems: "center", gap: 4 }}>
+                                  Mã nhận cơm tại quầy <I.chevR size={14} style={{ color: "#64748B" }} />
                                 </div>
-                                <div className="tnum" style={{ fontSize: 11.5, color: "var(--fg-3)", marginTop: 2 }}>
-                                  Mã NV: <strong>{emp?.employee_code ?? "—"}</strong>
+                                <div className="tnum" style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
+                                  Mã NV: <strong style={{ color: "#0F172A" }}>{emp?.employee_code ?? "—"}</strong>
                                 </div>
-                                <div style={{ fontSize: 11, color: "var(--teal-600)", fontWeight: 600, marginTop: 2 }}>
+                                <div style={{ fontSize: 11.5, color: "#0D4D33", fontWeight: 700, marginTop: 3 }}>
                                   Chạm để mở mã QR lớn
                                 </div>
                               </div>
@@ -487,16 +489,16 @@ export default function HomePage() {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 gap: 8,
-                                padding: "12px 14px",
+                                padding: "13px 16px",
                                 borderRadius: 14,
                                 border: "none",
                                 cursor: "pointer",
                                 font: "inherit",
                                 fontWeight: 700,
                                 fontSize: 14.5,
-                                background: "var(--fd-wd-solid)",
-                                color: "#fff",
-                                boxShadow: "0 6px 16px -4px rgba(20,114,76,0.45)",
+                                background: "linear-gradient(180deg, #136943 0%, #0A452B 100%)",
+                                color: "#ffffff",
+                                boxShadow: "0 6px 18px -3px rgba(10, 69, 43, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
                               }}
                             >
                               <I.qr size={18} sw={2.2} />
@@ -813,8 +815,8 @@ function DishTitle({ name }: { name: string }) {
   const head = { fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 18, letterSpacing: "-0.018em", lineHeight: 1.22 } as const;
   return (
     <>
-      <div style={{ ...head, color: "var(--fd-wd-deep)" }}>{main}</div>
-      {side && <div style={{ ...head, fontSize: 14.5, color: "var(--fg-2)", marginTop: 2 }}>+ {side}</div>}
+      <div style={{ ...head, color: "#0F172A" }}>{main}</div>
+      {side && <div style={{ ...head, fontSize: 14.5, color: "#475569", marginTop: 2 }}>+ {side}</div>}
     </>
   );
 }
