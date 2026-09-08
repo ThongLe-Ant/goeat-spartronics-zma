@@ -185,22 +185,22 @@ export default function HomePage() {
           <section>
             <div
               style={{
-                background: "var(--fd-wd-card)",
-                border: "1px solid var(--ge-sage-line)",
-                borderRadius: 20,
+                background: "#ffffff",
+                border: "1px solid rgba(0, 0, 0, 0.06)",
+                borderRadius: 22,
                 overflow: "hidden",
-                boxShadow: "0 8px 24px -4px rgba(10, 50, 32, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04)",
+                boxShadow: "0 14px 34px -6px rgba(10, 45, 30, 0.18), 0 3px 10px rgba(0, 0, 0, 0.04)",
               }}
             >
-              {/* Dải tiêu đề thẻ */}
+              {/* Dải tiêu đề thẻ — Nền kem vani ấm áp + Icon Cam Hổ Phách tương phản nổi bật trên nền xanh */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  padding: "11px 14px",
-                  background: "var(--ge-card-strip)",
-                  borderBottom: "1px solid var(--ge-sage-line)",
+                  gap: 9,
+                  padding: "12px 15px",
+                  background: "linear-gradient(135deg, #FFFDF7 0%, #FFF5E6 100%)",
+                  borderBottom: "1px solid #F2E5CE",
                 }}
               >
                 <span
@@ -208,20 +208,21 @@ export default function HomePage() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 28,
-                    height: 28,
-                    borderRadius: 9,
-                    background: "var(--fd-wd-solid)",
+                    width: 30,
+                    height: 30,
+                    borderRadius: 10,
+                    background: "linear-gradient(135deg, #FF7A00 0%, #EA580C 100%)",
                     color: "#fff",
                     flexShrink: 0,
+                    boxShadow: "0 3px 8px -1px rgba(234, 88, 12, 0.4)",
                   }}
                 >
-                  <I.utensils size={15} sw={2.2} />
+                  <I.utensils size={16} sw={2.2} />
                 </span>
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 14.5, letterSpacing: "-0.01em", color: "var(--fd-wd-deep)" }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15, letterSpacing: "-0.01em", color: "#1E293B" }}>
                   Suất ăn hôm nay
                 </span>
-                <span className="tnum" style={{ marginLeft: "auto", fontSize: 11.5, fontWeight: 600, color: "var(--fg-3)" }}>
+                <span className="tnum" style={{ marginLeft: "auto", fontSize: 12, fontWeight: 600, color: "#64748B" }}>
                   {weekdayFullVN(today)} · {dayMonth(today)}
                 </span>
               </div>
@@ -361,8 +362,8 @@ export default function HomePage() {
                             gap: 12,
                             padding: "12px 14px",
                             borderRadius: 16,
-                            background: isPickedUp ? "var(--ge-done-bg)" : "var(--fd-wd-slot)",
-                            border: `1px solid ${isPickedUp ? "var(--ge-done-line)" : "var(--ge-sage-line)"}`,
+                            background: isPickedUp ? "var(--ge-done-bg)" : "linear-gradient(135deg, #FFFDF8 0%, #FFF8EE 100%)",
+                            border: `1px solid ${isPickedUp ? "var(--ge-done-line)" : "#F2E4CD"}`,
                           }}
                         >
                           <span
@@ -374,9 +375,9 @@ export default function HomePage() {
                               height: 44,
                               borderRadius: 14,
                               flexShrink: 0,
-                              background: "var(--bg-surface)",
-                              color: pickedDish ? dishLook(pickedDish).ink : "var(--fd-wd-solid)",
-                              boxShadow: "var(--shadow-xs)",
+                              background: "#FFFFFF",
+                              color: pickedDish ? dishLook(pickedDish).ink : "#EA580C",
+                              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
                             }}
                           >
                             <I.utensils size={22} sw={2} />
@@ -512,10 +513,10 @@ export default function HomePage() {
                             display: "flex",
                             alignItems: "flex-start",
                             gap: 12,
-                            padding: "12px 14px",
+                            padding: "13px 14px",
                             borderRadius: 16,
-                            background: "var(--fd-wd-slot)",
-                            border: "1px solid var(--fd-wd-line)",
+                            background: "#F8FAFC",
+                            border: "1px solid #E2E8F0",
                           }}
                         >
                           <span
@@ -523,21 +524,22 @@ export default function HomePage() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: 40,
-                              height: 40,
+                              width: 42,
+                              height: 42,
                               borderRadius: 12,
                               flexShrink: 0,
-                              background: "var(--bg-surface)",
-                              color: "var(--fg-4)",
+                              background: "#FFFFFF",
+                              color: "#64748B",
+                              boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
                             }}
                           >
                             <I.utensilsX size={20} sw={2} />
                           </span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14.5, color: "var(--fg-2)" }}>
+                            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14.5, color: "#1E293B" }}>
                               {locked ? "Hôm nay không có suất ăn" : "Chưa chọn món hôm nay"}
                             </div>
-                            <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 2, lineHeight: 1.4 }}>
+                            <div style={{ fontSize: 12, color: "#64748B", marginTop: 3, lineHeight: 1.45 }}>
                               {locked ? "Hôm nay đã qua hạn chốt suất và bạn chưa đăng ký món." : "Ca ăn hôm nay vẫn còn mở. Hãy chọn món ở bên dưới để bếp phục vụ bạn."}
                             </div>
                           </div>
@@ -777,9 +779,9 @@ export default function HomePage() {
 
 const BADGE = {
   done: { label: "Đã nhận cơm", bg: "var(--ge-done-bg)", fg: "var(--ge-done-ink)", icon: I.checkCircle },
-  ordered: { label: "Đã đặt món", bg: "var(--fd-wd-track)", fg: "var(--fd-wd-deep)", icon: I.check },
+  ordered: { label: "Đã chọn món", bg: "var(--fd-wd-track)", fg: "var(--fd-wd-deep)", icon: I.check },
   auto: { label: "Suất mặc định", bg: "var(--fd-wd-track)", fg: "var(--fd-wd-deep)", icon: I.check },
-  none: { label: "Chưa có suất", bg: "var(--bg-soft)", fg: "var(--fg-3)", icon: I.info },
+  none: { label: "Chưa có suất", bg: "#F1F5F9", fg: "#64748B", icon: I.info },
 } as const;
 
 function StatusBadge({ state }: { state: keyof typeof BADGE }) {
