@@ -198,9 +198,9 @@ export function hasOpenCell(days: WeeklyDay[], shifts: WeeklyShift[]): boolean {
   return days.some((d) => !d.isLocked && shifts.some((s) => (d.menus[s.id]?.length ?? 0) > 0 && !d.lockedShifts[s.id]));
 }
 
-/** Suất NV sẽ nhận nếu không chọn: ca chỉ có 1 món, hoặc món có isDefault. */
+/** Suất NV sẽ nhận nếu không chọn: món có cờ isDefault, hoặc món Mặn 1 đầu tiên, hoặc món đầu tiên. */
 export function autoDishOf(dishes: OrderingFoodItem[] | undefined): OrderingFoodItem | null {
   if (!dishes || dishes.length === 0) return null;
   if (dishes.length === 1) return dishes[0];
-  return dishes.find((d) => d.isDefault) ?? null;
+  return dishes.find((d) => d.isDefault) ?? dishes.find((d) => d.columnName === "Mặn 1" || d.columnName === "Mặn" || d.category === "man1") ?? dishes[0];
 }

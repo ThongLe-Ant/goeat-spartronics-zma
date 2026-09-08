@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 import { I } from "@/components/icons";
 import { DayCard } from "@/components/ordering/day-card";
 import { ErrorBlock, LoadingBlock } from "@/components/ordering/status";
-import { weekdayVN, weekRangeLabel, ymdVN } from "@/lib/date-vn";
+import { dayKind, weekdayVN, weekRangeLabel, ymdVN } from "@/lib/date-vn";
 import { countPortions, hasOpenCell, useWeekMenu } from "@/state/ordering";
 
 type WeekTab = "this" | "next";
@@ -117,15 +117,62 @@ export default function WeeklyPage() {
           </span>
         </div>
 
-        {/* Hàng 3: Dải chọn ngày T2 -> T7 / CN */}
+        {/* Hàng 3: Dải chọn ngày T2 -> T7 / CN — Nổi bật T7 (Vàng) và CN (Đỏ) theo Spartronics */}
         {days.length > 0 && (
           <div style={{ display: "flex", gap: 5, marginTop: 8 }}>
             {days.map((d) => {
               const on = d.date === activeDate;
+              const kind = dayKind(d.date);
               const hasOrder = Object.keys(d.orders).length > 0;
               const allLocked = data ? data.shifts.length > 0 && data.shifts.every((s) => isCellLocked(d, s.id)) : false;
               const dayNum = d.date.slice(8, 10);
               const shortName = weekdayVN(d.date);
+
+              // Phong cách màu theo loại ngày: T7 vàng hổ phách, CN đỏ ruby, ngày thường xanh lục
+              let bg = "var(--bg-surface)";
+              let border = "1px solid var(--border-subtle)";
+              let labelColor = "var(--fg-3)";
+              let numColor = "var(--fg-1)";
+              let shadow = "none";
+              let dotColor = "var(--fd-wd-solid)";
+
+              if (on) {
+                if (kind === "sat") {
+                  bg = "linear-gradient(180deg, #d99b00 0%, #b28900 100%)";
+                  border = "1.5px solid #806200";
+                  shadow = "0 3px 9px -1px rgba(178, 137, 0, 0.45)";
+                } else if (kind === "sun") {
+                  bg = "var(--fd-sun-solid)";
+                  border = "1.5px solid var(--fd-sun-deep)";
+                  shadow = "0 3px 9px -1px rgba(186, 26, 26, 0.4)";
+                } else {
+                  bg = "var(--fd-wd-solid)";
+                  border = "1.5px solid var(--fd-wd-solid)";
+                  shadow = "0 3px 9px -1px rgba(20, 114, 76, 0.35)";
+                }
+                labelColor = "#ffffff";
+                numColor = "#ffffff";
+                dotColor = "#ffffff";
+              } else if (d.isToday) {
+                bg = "var(--fd-accent-tint)";
+                border = "1.5px solid var(--fd-accent-solid)";
+                labelColor = "var(--fd-accent-ink)";
+                numColor = "var(--fd-accent-ink)";
+                dotColor = "var(--fd-accent-solid)";
+              } else if (kind === "sat") {
+                bg = "color-mix(in srgb, var(--fd-sat-solid) 26%, var(--bg-surface))";
+                border = "1px solid color-mix(in srgb, var(--fd-sat-ink) 40%, transparent)";
+                labelColor = "var(--fd-sat-deep)";
+                numColor = "var(--fd-sat-deep)";
+                dotColor = "var(--fd-sat-deep)";
+              } else if (kind === "sun") {
+                bg = "color-mix(in srgb, var(--fd-sun-solid) 12%, var(--bg-surface))";
+                border = "1px solid color-mix(in srgb, var(--fd-sun-ink) 35%, transparent)";
+                labelColor = "var(--fd-sun-deep)";
+                numColor = "var(--fd-sun-deep)";
+                dotColor = "var(--fd-sun-deep)";
+              }
+
               return (
                 <button
                   key={d.date}
@@ -137,27 +184,26 @@ export default function WeeklyPage() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    padding: "5px 2px 4px",
-                    borderRadius: 12,
-                    border: on ? "1.5px solid var(--fd-wd-solid)" : "1px solid var(--border-subtle)",
-                    background: on ? "var(--fd-wd-solid)" : d.isToday ? "var(--fd-accent-tint)" : "var(--bg-surface)",
-                    color: on ? "#fff" : d.isToday ? "var(--fd-accent-ink)" : "var(--fg-2)",
+                    padding: "6px 2px 5px",
+                    borderRadius: 13,
+                    border,
+                    background: bg,
                     cursor: "pointer",
                     font: "inherit",
                     position: "relative",
                     transition: "all 140ms ease",
-                    boxShadow: on ? "0 3px 8px -1px rgba(20,114,76,0.3)" : "none",
+                    boxShadow: shadow,
                   }}
                 >
-                  <span style={{ fontSize: 10, fontWeight: 700, opacity: on ? 0.9 : 0.7 }}>
+                  <span style={{ fontSize: 10, fontWeight: kind !== "weekday" ? 800 : 700, color: labelColor, opacity: on ? 0.95 : 0.85 }}>
                     {shortName}
                   </span>
-                  <span className="tnum" style={{ fontSize: 13.5, fontWeight: 800, marginTop: 1, color: on ? "#fff" : "var(--fg-1)" }}>
+                  <span className="tnum" style={{ fontSize: 14, fontWeight: 800, marginTop: 1, color: numColor }}>
                     {dayNum}
                   </span>
-                  <div style={{ height: 5, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}>
+                  <div style={{ height: 5, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
                     {hasOrder ? (
-                      <span style={{ width: 4.5, height: 4.5, borderRadius: 999, background: on ? "#fff" : "var(--fd-wd-solid)" }} />
+                      <span style={{ width: 4.5, height: 4.5, borderRadius: 999, background: dotColor }} />
                     ) : allLocked ? (
                       <I.lock size={8} style={{ color: on ? "#fff" : "var(--fg-4)" }} />
                     ) : null}

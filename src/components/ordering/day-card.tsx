@@ -88,7 +88,13 @@ export function DayCard({
         display: "flex",
         flexDirection: "column",
         background: "var(--fd-wd-card)",
-        border: "1px solid var(--fd-wd-line)",
+        border: day.isToday
+          ? "1.5px solid var(--fd-wd-solid)"
+          : kind === "sat"
+          ? "1.5px solid color-mix(in srgb, var(--fd-sat-ink) 35%, var(--fd-wd-line))"
+          : kind === "sun"
+          ? "1.5px solid color-mix(in srgb, var(--fd-sun-solid) 35%, var(--fd-wd-line))"
+          : "1px solid var(--fd-wd-line)",
         borderRadius: 20,
         padding: "14px 14px 12px",
         boxShadow: day.isToday
@@ -202,16 +208,16 @@ export function DayCard({
 
 /** Ô rỗng giữa thẻ — Chủ nhật nghỉ bếp (ấm), hoặc bếp chưa lên thực đơn. */
 function EmptyBody({ sunday }: { sunday: boolean }) {
-  const ink = sunday ? "var(--fd-accent-ink)" : "var(--fd-wd-deep)";
-  const fill = sunday ? "var(--fd-accent-solid)" : "var(--fd-wd-solid)";
+  const ink = sunday ? "var(--fd-sun-deep)" : "var(--fd-wd-deep)";
+  const fill = sunday ? "var(--fd-sun-solid)" : "var(--fd-wd-solid)";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "2px 2px 4px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "8px 6px" }}>
       <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 52, height: 52, borderRadius: 999, flexShrink: 0, background: `color-mix(in srgb, ${fill} 14%, var(--bg-surface))`, color: ink }}>
-        <I.utensilsX size={24} sw={1.7} />
+        {sunday ? <I.heart size={24} sw={1.8} /> : <I.utensilsX size={24} sw={1.7} />}
       </span>
       <span style={{ minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, fontFamily: "var(--font-display)", color: ink }}>{sunday ? "Bếp nghỉ hôm nay" : "Chưa có thực đơn"}</p>
-        <p style={{ margin: 0, fontSize: 12.5, color: "var(--fg-3)" }}>{sunday ? "Tự nấu nướng hoặc ra ngoài ăn nhé!" : "Bếp chưa lên món cho ngày này."}</p>
+        <p style={{ margin: 0, fontSize: 15, fontWeight: 700, fontFamily: "var(--font-display)", color: ink }}>{sunday ? "Bếp nghỉ Chủ nhật" : "Chưa có thực đơn"}</p>
+        <p style={{ margin: 0, fontSize: 12.5, color: "var(--fg-3)", marginTop: 2 }}>{sunday ? "Tự nấu nướng hoặc ra ngoài ăn nhé!" : "Bếp chưa lên món cho ngày này."}</p>
       </span>
     </div>
   );

@@ -68,7 +68,7 @@ export function dishesFor(date: string, shiftId: number): OrderingFoodItem[] {
   const m = MENU_BY_WD[wd];
   const base = { description: null, meal_time_id: shiftId, side_dishes: m.canh, image_url: null, date };
   return [
-    { ...base, id: lineId(wd, shiftId, 1), menu_line_id: lineId(wd, shiftId, 1), name: m.m1, category: "man", ingredients: `COMBO:${lineId(wd, shiftId, 1)}`, kind: "combo", columnName: "Mặn 1" },
+    { ...base, id: lineId(wd, shiftId, 1), menu_line_id: lineId(wd, shiftId, 1), name: m.m1, category: "man", ingredients: `COMBO:${lineId(wd, shiftId, 1)}`, kind: "combo", columnName: "Mặn 1", isDefault: true },
     { ...base, id: lineId(wd, shiftId, 2), menu_line_id: lineId(wd, shiftId, 2), name: m.m2, category: "man", ingredients: `COMBO:${lineId(wd, shiftId, 2)}`, kind: "combo", columnName: "Mặn 2" },
     { ...base, id: lineId(wd, shiftId, 3), menu_line_id: lineId(wd, shiftId, 3), name: m.sub, category: "man", ingredients: `SUB:${lineId(wd, shiftId, 1)}:${lineId(wd, shiftId, 3)}`, kind: "substitute", columnName: "Món thay thế" },
     { ...base, id: lineId(wd, shiftId, 4), menu_line_id: lineId(wd, shiftId, 4), name: m.chay, category: "chay", ingredients: null, kind: "single", isVegetarian: true, columnName: "Chay" },
@@ -149,10 +149,7 @@ export async function mockWeekMenu(): Promise<WeeklyMenuData> {
   const now = Date.now();
   const today = ymdVN();
   const mon = mondayOf(today);
-  const week = (start: string) =>
-    Array.from({ length: 7 }, (_, i) => buildDay(addDays(start, i), today, now)).filter(
-      (d) => dayKind(d.date) !== "sun" || Object.keys(d.menus).length > 0 || Object.keys(d.orders).length > 0,
-    );
+  const week = (start: string) => Array.from({ length: 7 }, (_, i) => buildDay(addDays(start, i), today, now));
   return { shifts: SHIFTS, thisWeek: week(mon), nextWeek: week(addDays(mon, 7)), allowOrderingThisWeek: true };
 }
 
