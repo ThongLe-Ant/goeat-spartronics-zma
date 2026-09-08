@@ -1,5 +1,9 @@
-// GoEat — bottom navigation. Switches between Employee (5 tabs, center QR) and
-// Staff/quầy-bếp (3 tabs) based on the active route's handle.nav.
+// GoEat — Bottom Navigation: Floating Island Dock (Đảo nổi lơ lửng)
+// Thiết kế lấy cảm hứng từ iOS Dynamic Island / Grab Food:
+// - Dock nổi lơ lửng cách 2 bên 14px, bo cong 26px, kính mờ frosted glass cao cấp
+// - Nút QR trung tâm thiết kế Squircle 3D hiện đại, gradient ngọc lục bảo sâu, viền sáng và bóng đổ glow
+// - Các tab xung quanh có hiệu ứng capsule chuyển động mượt mà khi chọn, phản hồi chạm trực quan
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRouteHandle } from "@/hooks";
 import { I } from "./icons";
@@ -30,102 +34,182 @@ export default function Footer() {
   const [handle] = useRouteHandle();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [pressedId, setPressedId] = useState<string | null>(null);
 
   if (!handle.nav) return null;
   const tabs = handle.nav === "admin" ? ADMIN_TABS : EMP_TABS;
-  const isActive = (path: string) => (path === "/" || path === "/admin" ? pathname === path : pathname === path);
+  const isActive = (path: string) =>
+    path === "/" || path === "/admin"
+      ? pathname === path
+      : pathname === path || pathname.startsWith(path + "/");
 
   return (
-    <div
+    <nav
+      aria-label="Thanh điều hướng chính"
       style={{
         flexShrink: 0,
-        display: "flex",
-        background: "var(--bg-surface)",
-        borderTop: "1px solid var(--ge-sage-line)",
-        borderRadius: "18px 18px 0 0",
-        padding: "8px 6px calc(var(--safe-bottom) + 8px)",
+        position: "relative",
         zIndex: 50,
-        boxShadow: "var(--ge-shadow-nav)",
+        padding: "4px 14px calc(var(--safe-bottom) + 8px)",
+        background: "transparent",
+        boxSizing: "border-box",
       }}
     >
-      {tabs.map((t) => {
-        const Ico = I[t.icon];
-        const on = isActive(t.path);
-        if (t.center) {
+      <div
+        style={{
+          height: 64,
+          borderRadius: 26,
+          background: "rgba(255, 255, 255, 0.94)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(214, 232, 222, 0.9)",
+          boxShadow:
+            "0 12px 32px -4px rgba(20, 114, 76, 0.16), 0 3px 12px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.95)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 6px",
+          gap: 2,
+        }}
+      >
+        {tabs.map((t) => {
+          const Ico = I[t.icon];
+          const on = isActive(t.path);
+          const isPressed = pressedId === t.id;
+
+          if (t.center) {
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => navigate(t.path)}
+                onPointerDown={() => setPressedId(t.id)}
+                onPointerUp={() => setPressedId(null)}
+                onPointerLeave={() => setPressedId(null)}
+                style={{
+                  flex: 1,
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 2,
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  position: "relative",
+                  WebkitTapHighlightColor: "transparent",
+                  transform: isPressed ? "scale(0.92)" : on ? "scale(1.02)" : "scale(1)",
+                  transition: "transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+                }}
+              >
+                {/* 3D Squircle QR Button */}
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: on
+                      ? "linear-gradient(145deg, #116a44 0%, #073a24 100%)"
+                      : "linear-gradient(145deg, #189865 0%, #0d593b 100%)",
+                    color: "#ffffff",
+                    border: on
+                      ? "1.5px solid rgba(255, 255, 255, 0.6)"
+                      : "1.5px solid rgba(255, 255, 255, 0.35)",
+                    boxShadow: on
+                      ? "0 4px 14px rgba(13, 89, 59, 0.5), inset 0 1px 1.5px rgba(255, 255, 255, 0.55)"
+                      : "0 6px 16px -2px rgba(20, 114, 76, 0.42), 0 2px 6px rgba(0, 0, 0, 0.06), inset 0 1px 1.5px rgba(255, 255, 255, 0.45)",
+                    transition: "all 200ms ease",
+                  }}
+                >
+                  <Ico size={22} sw={2.1} />
+                </div>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    letterSpacing: "-0.01em",
+                    color: on ? "var(--fd-wd-solid)" : "var(--fg-3)",
+                    transition: "color 180ms ease",
+                  }}
+                >
+                  {t.label}
+                </span>
+              </button>
+            );
+          }
+
           return (
             <button
               key={t.id}
+              type="button"
               onClick={() => navigate(t.path)}
+              onPointerDown={() => setPressedId(t.id)}
+              onPointerUp={() => setPressedId(null)}
+              onPointerLeave={() => setPressedId(null)}
               style={{
                 flex: 1,
+                height: 52,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 5,
-                background: "none",
+                justifyContent: "center",
+                gap: 3,
+                background: on ? "rgba(20, 114, 76, 0.09)" : "transparent",
+                borderRadius: 18,
                 border: "none",
                 cursor: "pointer",
-                padding: 0,
+                padding: "4px 2px",
                 position: "relative",
+                WebkitTapHighlightColor: "transparent",
+                color: on ? "var(--fd-wd-solid)" : "var(--fg-3)",
+                transform: isPressed ? "scale(0.93)" : "scale(1)",
+                transition: "all 180ms cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}
             >
-              <span
+              <div
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 999,
-                  marginTop: -26,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "linear-gradient(160deg, var(--teal-400), var(--teal-600))",
-                  color: "#fff",
-                  border: "4px solid var(--bg-surface)",
-                  boxShadow: "0 8px 20px rgba(20,114,76,0.35)",
-                  transform: on ? "scale(1.04)" : "none",
-                  transition: "transform 180ms var(--ease-spring)",
+                  transform: on ? "translateY(-1px)" : "none",
+                  transition: "transform 180ms ease",
                 }}
               >
-                <Ico size={24} />
-              </span>
+                <Ico size={20} sw={on ? 2.3 : 1.85} />
+              </div>
               <span
                 style={{
-                  fontSize: 11,
-                  fontWeight: on ? 700 : 600,
-                  color: on ? "var(--fd-wd-solid)" : "var(--fg-3)",
-                  marginTop: -2,
+                  fontSize: 10.5,
+                  fontWeight: on ? 750 : 550,
+                  lineHeight: 1,
+                  letterSpacing: "-0.01em",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {t.label}
               </span>
+              {on && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: 4,
+                    width: 4,
+                    height: 4,
+                    borderRadius: 999,
+                    background: "var(--fd-wd-solid)",
+                  }}
+                />
+              )}
             </button>
           );
-        }
-        return (
-          <button
-            key={t.id}
-            onClick={() => navigate(t.path)}
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 4,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px 0",
-              position: "relative",
-              color: on ? "var(--fd-wd-solid)" : "var(--fg-3)",
-            }}
-          >
-            <span style={{ position: "relative" }}>
-              <Ico size={23} />
-            </span>
-            <span style={{ fontSize: 11, fontWeight: on ? 700 : 500 }}>{t.label}</span>
-          </button>
-        );
-      })}
-    </div>
+        })}
+      </div>
+    </nav>
   );
 }
