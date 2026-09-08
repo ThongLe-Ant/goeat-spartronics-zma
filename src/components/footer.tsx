@@ -108,20 +108,24 @@ export default function Footer() {
       <nav
         aria-label="Thanh điều hướng quản trị"
         style={{
-          flexShrink: 0,
-          position: "relative",
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
           zIndex: 50,
           padding: "6px 16px calc(var(--safe-bottom) + 8px)",
           background: "transparent",
+          pointerEvents: "none",
         }}
       >
         <div
           style={{
+            pointerEvents: "auto",
             height: 60,
             borderRadius: 24,
             background: "#ffffff",
-            border: "1.2px solid rgba(214, 232, 222, 0.85)",
-            boxShadow: "0 12px 28px rgba(15, 23, 42, 0.1), 0 3px 8px rgba(0, 0, 0, 0.04)",
+            border: "none",
+            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-around",
@@ -188,11 +192,14 @@ export default function Footer() {
     <nav
       aria-label="Thanh điều hướng chính"
       style={{
-        flexShrink: 0,
-        position: "relative",
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
         zIndex: 50,
         padding: "6px 16px calc(var(--safe-bottom) + 8px)",
         background: "transparent",
+        pointerEvents: "none",
         boxSizing: "border-box",
       }}
     >
@@ -202,9 +209,10 @@ export default function Footer() {
           position: "relative",
           height: 62,
           width: "100%",
+          pointerEvents: "auto",
         }}
       >
-        {/* Nền SVG U-Notch có vết khuyết cong mượt mà theo ảnh mẫu */}
+        {/* Nền SVG U-Notch có vết khuyết cong mượt mà — Thuần trắng, KHÔNG có viền xám bao quanh */}
         <svg
           width={dockWidth}
           height={62}
@@ -217,23 +225,14 @@ export default function Footer() {
             width: "100%",
             height: 62,
             pointerEvents: "none",
-            filter: "drop-shadow(0 14px 28px rgba(15, 23, 42, 0.12)) drop-shadow(0 3px 8px rgba(0, 0, 0, 0.04))",
+            filter: "drop-shadow(0 10px 24px rgba(15, 23, 42, 0.08)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.03))",
           }}
         >
-          {/* Thân dock màu trắng tinh khiết */}
+          {/* Thân dock màu trắng tinh khiết, viền trong suốt */}
           <path
             d={getNotchedDockPath(dockWidth, 62, 24)}
             fill="#ffffff"
-            stroke="rgba(214, 232, 222, 0.85)"
-            strokeWidth={1.2}
-          />
-          {/* Vành bóng đổ nhẹ tạo chiều sâu cho lòng khuyết U-cradle */}
-          <path
-            d={`M ${dockWidth / 2 - 31} 12 C ${dockWidth / 2 - 31} 22, ${dockWidth / 2 - 16} 27, ${dockWidth / 2} 27 C ${dockWidth / 2 + 16} 27, ${dockWidth / 2 + 31} 22, ${dockWidth / 2 + 31} 12`}
-            fill="none"
-            stroke="rgba(0, 0, 0, 0.06)"
-            strokeWidth={2.5}
-            strokeLinecap="round"
+            stroke="none"
           />
         </svg>
 

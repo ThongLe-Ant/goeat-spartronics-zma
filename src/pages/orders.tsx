@@ -123,7 +123,7 @@ export default function OrdersPage() {
       </div>
 
       {/* 2. NỘI DUNG DANH SÁCH */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px 24px" }} className="no-scrollbar">
+      <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px calc(var(--safe-bottom) + 88px)" }} className="no-scrollbar">
         {loading && !data ? (
           <LoadingBlock rows={4} />
         ) : error && !data ? (
