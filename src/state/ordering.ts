@@ -155,11 +155,19 @@ export function useWeekMenu() {
     [setData, setSaving, setSavedFlash, load],
   );
 
-  /** Chạm món: đang chọn thì bỏ, chưa thì chọn (radio: 1 món/ca). */
+  /** Chạm món: đang chọn thì bỏ, chưa thì chọn (radio: 1 món/ca). Mỗi ngày tối đa 2 suất. */
   const toggleDish = useCallback(
     (day: WeeklyDay, shiftId: number, dish: OrderingFoodItem) => {
       if (isCellLocked(day, shiftId)) return;
       const cur = day.orders[shiftId];
+      // Mỗi ngày tối đa 2 suất: nếu ca này chưa chọn và đã có 2 ca khác có suất -> báo lỗi
+      if (cur == null || cur !== dish.menu_line_id) {
+        const otherOrdersCount = Object.keys(day.orders).filter((sid) => Number(sid) !== shiftId && day.entitlements?.[Number(sid)] !== "none").length;
+        if (otherOrdersCount >= 2) {
+          toast.error("Mỗi ngày chỉ được chọn tối đa 2 suất ăn (1 ca chính + 1 tăng ca). Vui lòng bỏ chọn ca khác trước.");
+          return;
+        }
+      }
       void persist(day, shiftId, cur === dish.menu_line_id ? null : dish.menu_line_id);
     },
     [isCellLocked, persist],

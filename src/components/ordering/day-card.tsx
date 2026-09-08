@@ -129,9 +129,23 @@ export function DayCard({
             </span>
           )}
           {pickedCount > 0 && (
-            <span className="tnum" title={`Đã đặt ${pickedCount} suất`} style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 10.5, fontWeight: 700, padding: "3px 7px 3px 5px", borderRadius: 999, background: "var(--fd-wd-solid)", color: "var(--fd-wd-on-solid)" }}>
+            <span
+              className="tnum"
+              title={`Đã đặt ${pickedCount}/2 suất`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                fontSize: 10.5,
+                fontWeight: 700,
+                padding: "3px 8px 3px 6px",
+                borderRadius: 999,
+                background: pickedCount >= 2 ? "var(--gold)" : "var(--fd-wd-solid)",
+                color: pickedCount >= 2 ? "var(--gold-deep)" : "var(--fd-wd-on-solid)",
+              }}
+            >
               <I.check size={11} sw={3} />
-              {pickedCount}
+              {pickedCount}/2 suất
             </span>
           )}
           {allLocked && (
@@ -147,6 +161,27 @@ export function DayCard({
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
           <ShiftChips shifts={openShifts} day={day} active={active} onChange={setActive} />
+
+          {picked == null && pickedCount >= 2 && !locked && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 10px",
+                borderRadius: 12,
+                background: "color-mix(in srgb, var(--gold) 12%, var(--bg-surface))",
+                border: "1px solid color-mix(in srgb, var(--gold) 40%, transparent)",
+                color: "var(--gold-deep)",
+                fontSize: 11.5,
+                fontWeight: 600,
+                lineHeight: 1.35,
+              }}
+            >
+              <I.info size={13} style={{ flexShrink: 0 }} />
+              <span>Đã chọn đủ 2/2 suất cho ngày này. Bỏ chọn ca khác nếu muốn đổi sang ca này.</span>
+            </div>
+          )}
 
           {locked && !past && (
             <p style={{ margin: 0, display: "flex", alignItems: "flex-start", gap: 5, fontSize: 11.5, fontWeight: 600, lineHeight: 1.4, color: "var(--fd-lock)" }}>

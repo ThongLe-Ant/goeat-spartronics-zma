@@ -880,7 +880,7 @@ function UpcomingBookingRow({
         <div style={{ fontSize: 13.5, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--fg-1)" }}>
           {weekdayFullVN(day.date)}
         </div>
-        <div className="tnum" style={{ fontSize: 12, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div className="tnum" style={{ fontSize: 12, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {anyChosen ? (
             <span style={{ color: "var(--fd-wd-deep)", fontWeight: 600 }}>
               {lines
@@ -891,7 +891,9 @@ function UpcomingBookingRow({
           ) : allLocked ? (
             <span style={{ color: "var(--fg-4)" }}>Đã chốt suất · Không đăng ký</span>
           ) : (
-            <span style={{ color: "var(--ge-alert-ink)", fontWeight: 500 }}>Chưa chọn món · Chạm để đăng ký</span>
+            <span style={{ color: "var(--fg-3)", fontWeight: 500 }}>
+              Mặc định: <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>{lines[0]?.name ?? "Món mặn 1"}</span>
+            </span>
           )}
         </div>
       </div>
@@ -899,40 +901,66 @@ function UpcomingBookingRow({
       {hasOpenUnchosen ? (
         <span
           style={{
-            fontSize: 11.5,
-            fontWeight: 700,
-            padding: "4px 10px",
-            borderRadius: 999,
-            background: "var(--ge-card-strip)",
-            border: "1px solid var(--teal-300)",
-            color: "var(--fd-wd-ink)",
-            whiteSpace: "nowrap",
+            flexShrink: 0,
             display: "inline-flex",
             alignItems: "center",
-            gap: 3,
+            justifyContent: "center",
+            gap: 4,
+            minWidth: 84,
+            height: 36,
+            padding: "0 14px",
+            borderRadius: 999,
+            background: "var(--fd-wd-solid)",
+            color: "#ffffff",
+            fontSize: 13,
+            fontWeight: 800,
+            boxShadow: "0 3px 8px -1px rgba(20, 114, 76, 0.4)",
+            whiteSpace: "nowrap",
           }}
         >
-          + Chọn món
+          Chọn món
         </span>
       ) : anyChosen ? (
         <span
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 24,
-            height: 24,
-            borderRadius: 999,
-            background: "var(--fd-wd-solid)",
-            color: "#fff",
             flexShrink: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            height: 32,
+            padding: "0 11px",
+            borderRadius: 999,
+            background: "var(--fd-wd-track)",
+            color: "var(--fd-wd-deep)",
+            border: "1px solid var(--fd-wd-line)",
+            fontSize: 12,
+            fontWeight: 700,
+            whiteSpace: "nowrap",
           }}
         >
-          <I.check size={13} sw={3} />
+          <I.check size={12} sw={2.8} />
+          Đã chọn
         </span>
       ) : allLocked ? (
-        <span style={{ display: "flex", color: "var(--fg-4)", flexShrink: 0 }}>
-          <I.lock size={14} />
+        <span
+          style={{
+            flexShrink: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            height: 28,
+            padding: "0 9px",
+            borderRadius: 999,
+            background: "var(--bg-muted)",
+            color: "var(--fg-4)",
+            border: "1px solid var(--border-default)",
+            fontSize: 11,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <I.lock size={11} />
+          Đã chốt
         </span>
       ) : (
         <I.chevR size={16} style={{ color: "var(--fg-4)", flexShrink: 0 }} />

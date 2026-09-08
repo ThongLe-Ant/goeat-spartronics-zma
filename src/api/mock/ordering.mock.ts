@@ -178,14 +178,16 @@ export async function mockBatchOrder(input: BatchOrderInput): Promise<BatchOrder
     guard(o.meal_date, o.meal_time_id);
     const valid = dishesFor(o.meal_date, o.meal_time_id).some((d) => d.menu_line_id === o.menu_line_id);
     if (!valid) throw new Error("Món không có trong thực đơn ca này");
-    const ent = ROSTER[o.meal_time_id] ?? "none";
-    // Luật 1 main + 1 ot mỗi ngày: có suất cùng loại ở ca khác thì từ chối.
-    if (ent !== "none") {
-      const clash = MEAL_TIMES.some((mt) => mt.id !== o.meal_time_id && orders[key(o.meal_date, mt.id)]?.entitlement === ent);
-      if (clash) throw new Error(`Mỗi ngày chỉ được 1 suất ${ent === "main" ? "chính" : "tăng ca"}`);
+    // Luật Spartronics: mỗi ngày tối đa 2 suất (1 ca chính + 1 tăng ca)
+    const existingShifts = Object.keys(orders)
+      .filter((k) => k.startsWith(`${o.meal_date}|`))
+      .map((k) => Number(k.split("|")[1]));
+    const otherShifts = existingShifts.filter((sid) => sid !== o.meal_time_id);
+    if (otherShifts.length >= 2) {
+      throw new Error("Mỗi ngày chỉ được đăng ký tối đa 2 suất ăn (1 ca chính + 1 tăng ca)");
     }
+    const ent: Entitlement = otherShifts.length === 0 ? "main" : "ot";
     orders[key(o.meal_date, o.meal_time_id)] = { menu_line_id: o.menu_line_id, entitlement: ent };
-    if (ent === "none") noPortion.push({ meal_date: o.meal_date, meal_time_id: o.meal_time_id });
   }
   save();
   return { message: "Đã lưu", noPortion };
