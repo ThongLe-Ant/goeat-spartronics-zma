@@ -1,0 +1,18 @@
+{
+  "app": {
+    "title": "GoEat",
+    "id": "2600294893392654695",
+    "textColor": "white",
+    "statusBar": "transparent",
+    "actionBarHidden": true,
+    "hideIOSSafeAreaBottom": true,
+    "hideAndroidBottomNavigationBar": false
+  },
+  "listCSS": [],
+  "listSyncJS": [],
+  "listAsyncJS": [],
+  "template": {
+    "name": "goeat-zma",
+    "oaID": "YOUR_OA_ID"
+  }
+}

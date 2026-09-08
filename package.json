@@ -1,0 +1,50 @@
+{
+  "name": "goeat-zma",
+  "private": true,
+  "version": "1.0.0",
+  "description": "GoEat — Zalo Mini App đặt cơm nội bộ theo ca làm việc",
+  "repository": "",
+  "license": "UNLICENSED",
+  "browserslist": [
+    "Android >= 5",
+    "IOS >= 9.3",
+    "Edge >= 15",
+    "Safari >= 9.1",
+    "Chrome >= 49",
+    "Firefox >= 31",
+    "Samsung >= 5"
+  ],
+  "scripts": {
+    "login": "zmp login",
+    "dev": "zmp start",
+    "start": "zmp start",
+    "deploy": "zmp deploy",
+    "build": "zmp build",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
+  },
+  "dependencies": {
+    "jotai": "^2.12.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.5.2",
+    "react-router-dom": "^7.6.1",
+    "zmp-sdk": "latest",
+    "zmp-ui": "^1.11.7"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "cross-env": "^7.0.3",
+    "postcss": "^8.4.38",
+    "postcss-cli": "^8.3.1",
+    "postcss-preset-env": "^6.7.0",
+    "prettier": "3.5.3",
+    "sass": "^1.76.0",
+    "tailwindcss": "^3.4.3",
+    "typescript": "5.4.5",
+    "vite": "^5.2.13",
+    "zmp-vite-plugin": "latest"
+  }
+}

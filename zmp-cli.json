@@ -1,0 +1,17 @@
+{
+  "name": "goeat-zma",
+  "framework": "react-typescript",
+  "cssPreProcessor": "scss",
+  "includeTailwind": true,
+  "package": "zmp-ui",
+  "stateManagement": "jotai",
+  "template": "single-view",
+  "theming": {
+    "customColor": true,
+    "color": "#178A50",
+    "darkTheme": false,
+    "iconFonts": true,
+    "fillBars": false,
+    "useUiKits": true
+  }
+}

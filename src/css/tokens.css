@@ -1,0 +1,215 @@
+/* =============================================================
+   GoEat — Design Tokens
+   Base = Calvin Studio (colors_and_type.css)
+   + "Xanh phú quý" override: teal scale → emerald, gold accents,
+     layered shadows (from GoEat - Zalo Mini App.html <style>).
+   ============================================================= */
+
+/* -------- Fonts -------- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/Inter-VariableFont_opsz_wght.ttf") format("truetype-variations"),
+       url("../fonts/Inter-VariableFont_opsz_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- Brand: emerald (remapped teal scale) ---------- */
+  --teal-50:  #E9F3EE;
+  --teal-100: #CFE6DA;
+  --teal-200: #A3D3BA;
+  --teal-300: #6FB894;
+  --teal-400: #3D9A6E;
+  --teal-500: #14724C;   /* brand primary — xanh rừng (spartronics --fd-wd-solid) */
+  --teal-600: #115F40;
+  --teal-700: #0D4D33;
+  --teal-800: #0A3B28;
+  --teal-900: #07291C;
+
+  --brand:        var(--teal-500);
+  --brand-hover:  var(--teal-600);
+  --brand-press:  var(--teal-700);
+  --brand-soft:   var(--teal-50);
+  --border-brand: var(--teal-500);
+
+  /* ---------- Gold accents ---------- */
+  --gold-50:  #FBF3E0;
+  --gold-100: #F4E4AE;
+  --gold-200: #E9CE78;
+  --gold-300: #DBB94C;
+  --gold:        #C68A12;
+  --gold-strong: #A6730D;
+  --gold-deep:   #7E560A;
+  --gold-bright: #E8C964;
+
+  /* ---------- Warm neutrals (Sand) ---------- */
+  --sand-0:   #FFFFFF;
+  --sand-50:  #FBFAF7;
+  --sand-100: #F5F3EE;
+  --sand-200: #EAE6DD;
+  --sand-300: #D8D2C5;
+  --sand-400: #B8B0A0;
+  --sand-500: #908778;
+  --sand-600: #6B6457;
+  --sand-700: #4A453B;
+  --sand-800: #2E2A23;
+  --sand-900: #1B1814;
+
+  /* ---------- Semantic foreground ---------- */
+  --fg-1:   var(--sand-900);
+  --fg-2:   var(--sand-700);
+  --fg-3:   var(--sand-500);
+  --fg-4:   var(--sand-400);
+  --fg-inv: var(--sand-0);
+
+  /* ---------- Semantic surfaces ---------- */
+  --bg-page:    #FFFFFF; /* trang trắng, thẻ tách bằng viền + bóng (spartronics) */
+  --bg-surface: var(--sand-0);
+  --bg-soft:    var(--sand-100);
+  --bg-muted:   var(--sand-200);
+  --bg-inverse: var(--sand-900);
+
+  /* ---------- Borders ---------- */
+  --border-subtle: var(--sand-200);
+  --border-default: var(--sand-300);
+  --border-strong:  var(--sand-500);
+
+  /* ---------- Status ---------- */
+  --success-50:  #ECFDF5;
+  --success-500: #10B981;
+  --success-700: #047857;
+
+  --warning-50:  #FFFAEB;
+  --warning-200: #FCE9C8;
+  --warning-500: #F59E0B;
+  --warning-700: #B45309;
+
+  --danger-50:   #FEF2F2;
+  --danger-500:  #EF4444;
+  --danger-700:  #B91C1C;
+
+  --info-50:     #EFF6FF;
+  --info-500:    #3B82F6;
+  --info-700:    #1D4ED8;
+
+  /* ---------- Focus ring (emerald) ---------- */
+  --ring: 0 0 0 3px rgba(20, 114, 76, 0.26);
+  --shadow-ring-brand: 0 0 0 1px rgba(20, 114, 76, 0.3), 0 6px 24px -8px rgba(20, 114, 76, 0.42);
+
+  /* ---------- Type ---------- */
+  --font-sans:    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+
+  /* ---------- Radii ---------- */
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --radius-2xl: 28px;
+  --radius-pill: 999px;
+
+  /* ---------- Shadows (refined layered, emerald-tinted) ---------- */
+  --shadow-xs: 0 1px 2px rgba(16, 40, 34, 0.05), 0 1px 1px rgba(16, 40, 34, 0.03);
+  --shadow-sm: 0 1px 3px rgba(16, 40, 34, 0.07), 0 1px 2px rgba(16, 40, 34, 0.04);
+  --shadow-md: 0 4px 8px -2px rgba(16, 40, 34, 0.08), 0 2px 4px -2px rgba(16, 40, 34, 0.05);
+  --shadow-lg: 0 12px 22px -8px rgba(16, 40, 34, 0.16), 0 4px 8px -4px rgba(16, 40, 34, 0.08);
+
+  /* ---------- Motion ---------- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* =============================================================
+   Màn ĐẶT MÓN — token `--fd-*` chép đúng từ tanloc-spartronics
+   (src/app/goeat-tokens.css) để ZMA trông giống hệt bản web.
+   Ngày thường: Emerald Forest · Thứ Bảy: Golden Hour · Chủ nhật: Berry.
+   ============================================================= */
+:root {
+  --fd-wd-ink: #146b48;
+  --fd-wd-card: #ffffff;
+  --fd-wd-line: #dceade;
+  --fd-wd-line-strong: #8fd3b0;
+  --fd-wd-slot: #f1f6f0;
+  --fd-wd-track: #edf3ec;
+  --fd-wd-solid: #14724c;
+  --fd-wd-on-solid: #ffffff;
+  --fd-wd-halo: rgba(20, 114, 76, 0.12);
+  --fd-wd-deep: #0d4d33;
+  --fd-wd-cta: #14724c;
+  --fd-wd-cta-ink: #ffffff;
+
+  --fd-sat-ink: #b28900;
+  --fd-sat-solid: #ffe082;
+  --fd-sat-on-solid: #806200;
+  --fd-sat-deep: #806200;
+
+  --fd-sun-ink: #ba1a1a;
+  --fd-sun-solid: #ba1a1a;
+  --fd-sun-on-solid: #ffffff;
+  --fd-sun-deep: #93000a;
+
+  /* Màu theo LOẠI MÓN — trục màu thứ hai. */
+  --fd-cat-man-ink: #be123c;
+  --fd-cat-nuoc-ink: #b45309;
+  --fd-cat-chay-ink: #047857;
+  --fd-cat-sub-ink: #475569;
+  --fd-cat-khac-ink: #52606f;
+
+  /* Tờ lịch (số ngày) — trục màu thứ ba, đất nung. */
+  --fd-cal-spine: #c2410c;
+  --fd-cal-edge: #e2cdbe;
+  --fd-cal-ink: #7c2d12;
+  --fd-dot-alpha: 28%;
+
+  /* Cam "Hôm nay", đỏ "đã chốt". */
+  --fd-accent-ink: #c1440c;
+  --fd-accent-tint: #ffe8d2;
+  --fd-accent-solid: #e2560c;
+  --fd-accent-on-solid: #ffffff;
+  --fd-lock: #dc2626;
+  --fd-hover: #f4f1ea;
+}
+
+/* =============================================================
+   Lớp "chiều sâu" & Màu sắc theo style trang Đặt món (tươi và nét)
+   - Nền trang tinh khiết, thoáng sáng
+   - Header xanh ngọc tươi thương hiệu
+   - Viền và máng dùng chung token `--fd-*` của trang đặt món
+   - Cảnh báo dùng cam đất nung tươi nét (--fd-accent-*), bỏ màu vàng lè nhè
+   ============================================================= */
+:root {
+  /* Nền trang cho Hôm nay / Suất ăn / Cá nhân — sáng sạch, tôn thẻ trắng */
+  --ge-sage: #f8faf8;
+  --ge-sage-line: var(--fd-wd-line);
+
+  /* Header xanh thương hiệu — Emerald tươi mát, sang trọng */
+  --ge-header: radial-gradient(120% 90% at 88% 0%, #168a5c 0%, #0d593b 62%, #09402a 100%);
+  --ge-header-deep: linear-gradient(180deg, #09402a 0%, #0d5438 45%, #147952 100%);
+  --ge-glass: rgba(255, 255, 255, 0.18);
+  --ge-glass-line: rgba(255, 255, 255, 0.26);
+  --ge-on-header: rgba(255, 255, 255, 0.85);
+
+  /* Bóng thẻ — mỏng mảnh, sắc nét chuẩn trang đặt món */
+  --ge-shadow-card: 0 1px 3px rgba(24, 20, 14, 0.05), 0 10px 22px -16px rgba(24, 20, 14, 0.25);
+  --ge-shadow-lift: 0 4px 16px rgba(20, 114, 76, 0.08), 0 1px 3px rgba(24, 20, 14, 0.04);
+  --ge-shadow-ticket: 0 20px 40px -16px rgba(10, 50, 32, 0.4);
+  --ge-shadow-nav: 0 -4px 20px -10px rgba(14, 60, 40, 0.2);
+
+  /* Nền dải tiêu đề & pill tag bên trong thẻ — mượn máng của trang đặt món */
+  --ge-card-strip: var(--fd-wd-track);
+  --ge-card-strip-line: var(--fd-wd-line);
+
+  /* Nhấn cảnh báo hạn chốt — Cam đất nung tươi nét (--fd-accent-*), KHÔNG dùng vàng lè nhè */
+  --ge-alert-bg: var(--fd-accent-tint);
+  --ge-alert-line: color-mix(in srgb, var(--fd-accent-solid) 32%, transparent);
+  --ge-alert-ink: var(--fd-accent-ink);
+  --ge-alert-solid: var(--fd-accent-solid);
+
+  /* Thông báo hoàn thành — Xanh dịu */
+  --ge-done-bg: #f0fdf4;
+  --ge-done-line: #bbf7d0;
+  --ge-done-ink: #15803d;
+}
