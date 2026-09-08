@@ -149,7 +149,7 @@ export default function HomePage() {
       ) : status === "error" && !data ? (
         <ErrorBlock message={error ?? "Không tải được thực đơn"} onRetry={() => reload()} />
       ) : data ? (
-        <div style={{ padding: "0 16px 28px", marginTop: -16, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ padding: "0 16px 28px", marginTop: 8, display: "flex", flexDirection: "column", gap: 16 }}>
           {/* 2. TẤM VÉ SUẤT ĂN HÔM NAY (Digital Meal Pass) */}
           <section>
             <div

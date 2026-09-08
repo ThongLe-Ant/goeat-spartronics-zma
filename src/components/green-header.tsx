@@ -36,11 +36,11 @@ export function GreenHeader({
 }) {
   return (
     <div style={{ position: "relative", flexShrink: 0, background: deep ? "var(--ge-header-deep)" : "var(--ge-header)", color: "#fff" }}>
-      {/* Chừa chỗ bên phải cho capsule của Zalo (nút … / thoát) và an toàn với status bar. */}
-      <div style={{ padding: `calc(max(var(--safe-top, 0px), 38px) + 8px) 16px ${wave ? pad + 20 : pad}px` }}>{children}</div>
+      {/* Chừa chỗ bên phải cho capsule của Zalo (nút … / thoát) và đệm đủ sâu để nội dung ở TRÊN đường lượn sóng. */}
+      <div style={{ padding: `calc(max(var(--safe-top, 0px), 38px) + 8px) 16px ${wave ? pad + 28 : pad}px` }}>{children}</div>
       {wave && (
-        <svg viewBox="0 0 390 40" preserveAspectRatio="none" aria-hidden style={{ display: "block", position: "absolute", left: 0, right: 0, bottom: -1, width: "100%", height: 40 }}>
-          <path d="M0 34 C 140 38, 250 4, 390 6 L390 40 L0 40 Z" fill={waveFill} />
+        <svg viewBox="0 0 390 28" preserveAspectRatio="none" aria-hidden style={{ display: "block", position: "absolute", left: 0, right: 0, bottom: -1, width: "100%", height: 28, pointerEvents: "none" }}>
+          <path d="M0 22 C 140 28, 260 4, 390 8 L390 28 L0 28 Z" fill={waveFill} />
         </svg>
       )}
     </div>

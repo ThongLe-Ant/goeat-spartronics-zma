@@ -58,16 +58,16 @@ export default function WeeklyPage() {
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", background: "var(--bg-page)" }}>
-      {/* 1. ĐẦU TRANG — TINH GỌN & HIỆN ĐẠI */}
-      <div style={{ flexShrink: 0, padding: "calc(var(--safe-top) + 8px) 16px 10px", background: "var(--bg-surface)", borderBottom: "1px solid var(--fd-wd-line)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, paddingRight: 96 }}>
-          <div>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 18, letterSpacing: "-0.01em", color: "var(--fg-1)" }}>
+      {/* 1. ĐẦU TRANG — TINH GỌN, KHÔNG VỠ DÒNG */}
+      <div style={{ flexShrink: 0, padding: "calc(var(--safe-top) + 6px) 14px 8px", background: "var(--bg-surface)", borderBottom: "1px solid var(--fd-wd-line)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingRight: 88 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 17, letterSpacing: "-0.01em", color: "var(--fg-1)", whiteSpace: "nowrap" }}>
               Đăng ký suất ăn
-            </div>
-            <div className="tnum" style={{ fontSize: 11.5, fontWeight: 600, color: "var(--fg-3)", marginTop: 1 }}>
-              {pickedDays}/{menuDays} ngày đã chọn · {weekRangeLabel(days)}
-            </div>
+            </span>
+            <span className="tnum" style={{ fontSize: 11, fontWeight: 700, color: "var(--fd-wd-deep)", whiteSpace: "nowrap" }}>
+              ({pickedDays}/{menuDays} ngày)
+            </span>
           </div>
 
           {/* Tab Tuần này / Tuần sau siêu gọn */}
@@ -83,11 +83,11 @@ export default function WeeklyPage() {
                   aria-selected={on}
                   onClick={() => setTab(t)}
                   style={{
-                    padding: "5px 12px",
+                    padding: "4px 10px",
                     borderRadius: 999,
                     border: "none",
                     font: "inherit",
-                    fontSize: 12,
+                    fontSize: 11.5,
                     fontWeight: 700,
                     whiteSpace: "nowrap",
                     background: on ? "var(--fd-wd-solid)" : "transparent",
@@ -96,12 +96,12 @@ export default function WeeklyPage() {
                     cursor: "pointer",
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 4,
+                    gap: 3,
                   }}
                 >
                   {t === "this" ? "Tuần này" : "Tuần sau"}
                   {n > 0 && (
-                    <span style={{ fontSize: 10, fontWeight: 800, padding: "1px 5px", borderRadius: 999, background: on ? "rgba(255,255,255,0.25)" : "var(--bg-surface)", color: on ? "#fff" : "var(--fd-wd-deep)" }}>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: "0 4px", borderRadius: 999, background: on ? "rgba(255,255,255,0.25)" : "var(--bg-surface)", color: on ? "#fff" : "var(--fd-wd-deep)" }}>
                       {n}
                     </span>
                   )}
@@ -113,13 +113,13 @@ export default function WeeklyPage() {
 
         {/* Dải chọn ngày T2 -> T7 / CN */}
         {days.length > 0 && (
-          <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+          <div style={{ display: "flex", gap: 5, marginTop: 8 }}>
             {days.map((d) => {
               const on = d.date === activeDate;
               const hasOrder = Object.keys(d.orders).length > 0;
               const allLocked = data ? data.shifts.length > 0 && data.shifts.every((s) => isCellLocked(d, s.id)) : false;
               const dayNum = d.date.slice(8, 10);
-              const shortName = weekdayVN(d.date); // T2, T3...
+              const shortName = weekdayVN(d.date);
               return (
                 <button
                   key={d.date}
@@ -131,8 +131,8 @@ export default function WeeklyPage() {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    padding: "6px 2px 5px",
-                    borderRadius: 14,
+                    padding: "5px 2px 4px",
+                    borderRadius: 12,
                     border: on ? "1.5px solid var(--fd-wd-solid)" : "1px solid var(--border-subtle)",
                     background: on ? "var(--fd-wd-solid)" : d.isToday ? "var(--fd-accent-tint)" : "var(--bg-surface)",
                     color: on ? "#fff" : d.isToday ? "var(--fd-accent-ink)" : "var(--fg-2)",
@@ -140,20 +140,20 @@ export default function WeeklyPage() {
                     font: "inherit",
                     position: "relative",
                     transition: "all 140ms ease",
-                    boxShadow: on ? "0 4px 12px -2px rgba(20,114,76,0.35)" : "none",
+                    boxShadow: on ? "0 3px 8px -1px rgba(20,114,76,0.3)" : "none",
                   }}
                 >
-                  <span style={{ fontSize: 10.5, fontWeight: 700, opacity: on ? 0.9 : 0.7 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, opacity: on ? 0.9 : 0.7 }}>
                     {shortName}
                   </span>
-                  <span className="tnum" style={{ fontSize: 14.5, fontWeight: 800, marginTop: 1, color: on ? "#fff" : "var(--fg-1)" }}>
+                  <span className="tnum" style={{ fontSize: 13.5, fontWeight: 800, marginTop: 1, color: on ? "#fff" : "var(--fg-1)" }}>
                     {dayNum}
                   </span>
-                  <div style={{ height: 6, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2 }}>
+                  <div style={{ height: 5, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}>
                     {hasOrder ? (
-                      <span style={{ width: 5, height: 5, borderRadius: 999, background: on ? "#fff" : "var(--fd-wd-solid)" }} />
+                      <span style={{ width: 4.5, height: 4.5, borderRadius: 999, background: on ? "#fff" : "var(--fd-wd-solid)" }} />
                     ) : allLocked ? (
-                      <I.lock size={9} style={{ color: on ? "#fff" : "var(--fg-4)" }} />
+                      <I.lock size={8} style={{ color: on ? "#fff" : "var(--fg-4)" }} />
                     ) : null}
                   </div>
                 </button>
@@ -163,8 +163,8 @@ export default function WeeklyPage() {
         )}
       </div>
 
-      {/* 2. VÙNG TRUNG TÂM — VỪA VẶN MÀN HÌNH, KHÔNG CẦN CUỘN */}
-      <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", padding: "10px 14px", overflowY: "auto" }} className="no-scrollbar">
+      {/* 2. VÙNG TRUNG TÂM — TỰ NHIÊN, KHÔNG BỊ CẮT ĐẦU ĐUÔI */}
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 14px 14px" }} className="no-scrollbar">
         {status === "loading" && !data ? (
           <LoadingBlock />
         ) : status === "error" && !data ? (
