@@ -20,7 +20,18 @@ export default function WeeklyPage() {
   const [activeDate, setActiveDate] = useState<string>("");
   const [confirmClear, setConfirmClear] = useState(false);
 
-  const days = useMemo(() => (data ? (tab === "this" ? data.thisWeek : data.nextWeek) : []), [data, tab]);
+  const rawDays = useMemo(() => (data ? (tab === "this" ? data.thisWeek : data.nextWeek) : []), [data, tab]);
+  // Nếu ngày Chủ nhật không có thực đơn và không có đơn thì không cần hiện
+  const days = useMemo(
+    () =>
+      rawDays.filter((d) => {
+        if (dayKind(d.date) !== "sun") return true;
+        const hasMenu = Object.values(d.menus).some((m) => m && m.length > 0);
+        const hasOrder = Object.keys(d.orders).length > 0;
+        return hasMenu || hasOrder;
+      }),
+    [rawDays],
+  );
   const total = countPortions(days);
   const openable = data ? hasOpenCell(days, data.shifts) : false;
   const clearable = openable && days.some((d) => Object.keys(d.orders).some((sid) => !d.isLocked && !d.lockedShifts[Number(sid)]));

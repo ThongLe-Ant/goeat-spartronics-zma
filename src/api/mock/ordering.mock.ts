@@ -149,7 +149,10 @@ export async function mockWeekMenu(): Promise<WeeklyMenuData> {
   const now = Date.now();
   const today = ymdVN();
   const mon = mondayOf(today);
-  const week = (start: string) => Array.from({ length: 7 }, (_, i) => buildDay(addDays(start, i), today, now));
+  const week = (start: string) =>
+    Array.from({ length: 7 }, (_, i) => buildDay(addDays(start, i), today, now)).filter(
+      (d) => dayKind(d.date) !== "sun" || Object.keys(d.menus).length > 0 || Object.keys(d.orders).length > 0,
+    );
   return { shifts: SHIFTS, thisWeek: week(mon), nextWeek: week(addDays(mon, 7)), allowOrderingThisWeek: true };
 }
 
