@@ -145,15 +145,15 @@ export default function HomePage() {
       </GreenHeader>
 
       {status === "loading" && !data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -26, padding: "0 16px 28px" }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px 28px" }}>
           <LoadingBlock rows={3} />
         </div>
       ) : status === "error" && !data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -26, padding: "0 16px 28px" }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px 28px" }}>
           <ErrorBlock message={error ?? "Không tải được thực đơn"} onRetry={() => reload()} />
         </div>
       ) : data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -26, padding: "0 16px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* 2. TẤM VÉ SUẤT ĂN HÔM NAY (Digital Meal Pass) */}
           <section>
             <div
