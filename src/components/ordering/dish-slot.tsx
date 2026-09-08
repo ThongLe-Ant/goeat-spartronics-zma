@@ -28,13 +28,16 @@ const PILL = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: 4,
-  padding: "4px 10px",
+  gap: 5,
+  minWidth: 84,
+  height: 38,
+  padding: "0 18px",
   borderRadius: 999,
-  fontSize: 11.5,
+  fontSize: 14,
   fontWeight: 700,
-  lineHeight: 1.15,
+  lineHeight: 1,
   whiteSpace: "nowrap",
+  boxSizing: "border-box",
 } as const;
 
 export function DishSlot({
@@ -66,7 +69,7 @@ export function DishSlot({
     gap: 10,
     width: "100%",
     textAlign: "left",
-    padding: "7px 9px",
+    padding: "8px 10px",
     borderRadius: 14,
     border: isNone ? "2px dashed var(--fg-4)" : isChosen ? "2px dashed var(--gold)" : "2px solid transparent",
     background: isChosen ? "var(--bg-surface)" : "transparent",
@@ -82,7 +85,7 @@ export function DishSlot({
       <span style={{ minWidth: 0, flex: 1 }}>
         <DishName name={dish.name} muted={!isChosen} />
         {tag && (
-          <span style={{ display: "block", marginTop: 1, fontSize: 10.5, fontWeight: 600, letterSpacing: "0.02em", color: isChosen ? (dish.isVegetarian ? "var(--fd-cat-chay-ink)" : "var(--fg-3)") : "var(--fg-4)" }}>
+          <span style={{ display: "block", marginTop: 1, fontSize: 11, fontWeight: 600, letterSpacing: "0.02em", color: isChosen ? (dish.isVegetarian ? "var(--fd-cat-chay-ink)" : "var(--fg-3)") : "var(--fg-4)" }}>
             {tag}
           </span>
         )}
@@ -94,15 +97,25 @@ export function DishSlot({
     <span
       key={key}
       className="ge-pickbtn ge-pickbtn--pop"
-      style={{ ...PILL, border: "1.5px solid color-mix(in srgb, var(--gold) 45%, transparent)", background: "color-mix(in srgb, var(--gold) 12%, var(--bg-surface))", color: "var(--gold-deep)" }}
+      style={{
+        ...PILL,
+        minWidth: 92,
+        height: 38,
+        padding: "0 14px",
+        border: "1.5px solid color-mix(in srgb, var(--gold) 55%, transparent)",
+        background: "color-mix(in srgb, var(--gold) 14%, var(--bg-surface))",
+        color: "var(--gold-deep)",
+        fontSize: 13.5,
+        fontWeight: 700,
+      }}
     >
-      <I.check size={13} sw={2.8} />
+      <I.check size={15} sw={2.8} />
       {label}
     </span>
   );
 
   const nonePill = (
-    <span key="none" className="ge-pickbtn" style={{ ...PILL, fontWeight: 600, fontSize: 11.5, padding: "3px 8px", minWidth: 0, border: "1.5px solid var(--border-default)", background: "var(--bg-muted)", color: "var(--fg-3)" }}>
+    <span key="none" className="ge-pickbtn" style={{ ...PILL, minWidth: 0, height: 32, fontWeight: 600, fontSize: 11.5, padding: "0 10px", border: "1.5px solid var(--border-default)", background: "var(--bg-muted)", color: "var(--fg-3)" }}>
       Ngoài ca làm việc
     </span>
   );
@@ -131,7 +144,18 @@ export function DishSlot({
       <span
         key="pick"
         className="ge-pickbtn ge-pickbtn--pop"
-        style={{ ...PILL, border: "1.5px solid transparent", background: "var(--fd-wd-solid)", color: "var(--fd-wd-on-solid)", boxShadow: "0 3px 8px -2px rgba(20,114,76,0.4)" }}
+        style={{
+          ...PILL,
+          minWidth: 84,
+          height: 38,
+          border: "none",
+          background: "var(--fd-wd-solid)",
+          color: "var(--fd-wd-on-solid)",
+          boxShadow: "0 3px 10px -2px rgba(20, 114, 76, 0.45)",
+          fontSize: 14,
+          fontWeight: 800,
+          letterSpacing: "0.01em",
+        }}
       >
         Chọn
       </span>

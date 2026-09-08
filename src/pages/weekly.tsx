@@ -190,8 +190,6 @@ export default function WeeklyPage() {
               shifts={data!.shifts}
               onPrev={prevDay ? () => setActiveDate(prevDay.date) : undefined}
               onNext={nextDay ? () => setActiveDate(nextDay.date) : undefined}
-              prevLabel={prevDay ? weekdayVN(prevDay.date) : undefined}
-              nextLabel={nextDay ? weekdayVN(nextDay.date) : undefined}
             />
           </div>
         )}

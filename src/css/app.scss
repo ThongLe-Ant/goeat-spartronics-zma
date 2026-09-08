@@ -215,6 +215,10 @@ button {
   min-width: 88px;
   padding: 10px 14px;
   font-size: 13px;
+  transition: transform 100ms ease;
+}
+.ge-pickbtn:active {
+  transform: scale(0.94);
 }
 /* Viên nảy một nhịp khi đổi trạng thái (key đổi ➝ chạy lại). */
 .ge-pickbtn--pop {

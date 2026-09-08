@@ -24,8 +24,6 @@ export function DayCard({
   initialShift,
   onPrev,
   onNext,
-  prevLabel,
-  nextLabel,
 }: {
   day: WeeklyDay;
   shifts: WeeklyShift[];
@@ -44,6 +42,21 @@ export function DayCard({
   useEffect(() => {
     if (!openShifts.some((s) => s.id === active)) setActive(preferred);
   }, [openShifts, active, preferred]);
+
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (diff > 45 && onNext) {
+      onNext();
+    } else if (diff < -45 && onPrev) {
+      onPrev();
+    }
+    setTouchStartX(null);
+  };
 
   const shift = openShifts.find((s) => s.id === active);
   const dishes = useMemo(() => sortDishes(day.menus[active] ?? []), [day.menus, active]);
@@ -66,6 +79,8 @@ export function DayCard({
     <article
       className="ge-daycard"
       data-past={past ? "true" : undefined}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       style={{
         ["--ge-day-ink" as string]: DAY_INK[kind],
         position: "relative",
@@ -179,58 +194,6 @@ export function DayCard({
               </button>
             )}
           </div>
-
-          {(onPrev || onNext) && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 6, paddingTop: 8, borderTop: "1px dashed var(--fd-wd-line)" }}>
-              <button
-                type="button"
-                disabled={!onPrev}
-                onClick={onPrev}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "5px 12px",
-                  borderRadius: 999,
-                  border: "1px solid var(--border-default)",
-                  background: "var(--bg-surface)",
-                  color: onPrev ? "var(--fg-2)" : "var(--fg-4)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: onPrev ? "pointer" : "default",
-                  opacity: onPrev ? 1 : 0.35,
-                }}
-              >
-                <I.chevL size={14} /> {prevLabel ?? "Trước"}
-              </button>
-
-              <span className="tnum" style={{ fontSize: 11.5, fontWeight: 700, color: "var(--fg-3)" }}>
-                {weekdayFullVN(day.date)} · {day.date.slice(8, 10)}/{day.date.slice(5, 7)}
-              </span>
-
-              <button
-                type="button"
-                disabled={!onNext}
-                onClick={onNext}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 4,
-                  padding: "5px 12px",
-                  borderRadius: 999,
-                  border: "1px solid var(--border-default)",
-                  background: "var(--bg-surface)",
-                  color: onNext ? "var(--fg-2)" : "var(--fg-4)",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: onNext ? "pointer" : "default",
-                  opacity: onNext ? 1 : 0.35,
-                }}
-              >
-                {nextLabel ?? "Sau"} <I.chevR size={14} />
-              </button>
-            </div>
-          )}
         </div>
       )}
     </article>
