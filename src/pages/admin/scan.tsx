@@ -4,9 +4,10 @@ import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { scanQRCode } from "zmp-sdk/apis";
-import { Btn, Field, ScreenHeader, cardS } from "@/components/ui";
+import { Btn, Field, ScreenHeader } from "@/components/ui";
 import { I } from "@/components/icons";
 import StaffGuard from "@/components/staff-guard";
+import { LatestResult, ResultLog, type ResultView } from "@/components/admin/dispense-result";
 import { scanCard } from "@/api/staff";
 import { useBootstrap } from "@/state/ordering";
 import type { ScanDeniedResult, ScanOutcome } from "@/api/types";
@@ -23,39 +24,13 @@ const DENIED_TITLE: Record<ScanDeniedResult, string> = {
 
 type Entry = { id: number; value: string; at: string; outcome: ScanOutcome };
 
-function ResultCard({ e, big }: { e: Entry; big?: boolean }) {
+/** Đổi một lượt quét thành dạng để hiện, xem `dispense-result.tsx`. */
+function viewOf(e: Entry): ResultView & { id: number } {
   const o = e.outcome;
-  const served = o.kind === "served";
-  const name = served ? o.data.employee_name : o.details?.employee_name;
-  const code = served ? o.data.employee_code : o.details?.employee_code ?? e.value;
-  const dish = served ? o.data.food_name : o.details?.food_name;
-  const shift = served ? o.data.meal_time_name : o.details?.meal_time_name;
-  const dept = served ? o.data.department : o.details?.department;
-  const tone = served ? { bg: "var(--success-50, #e9f8ef)", bd: "var(--success-500)", fg: "var(--success-700, #157347)" } : o.result === "already_picked" ? { bg: "var(--gold-50, #fff7e0)", bd: "var(--gold-bright)", fg: "var(--gold-deep)" } : { bg: "var(--danger-50, #fdecec)", bd: "var(--danger-500, #d33)", fg: "var(--danger-700, #a32020)" };
-  return (
-    <div style={{ ...cardS, borderColor: tone.bd, background: tone.bg, padding: big ? 16 : 12 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ width: big ? 44 : 34, height: big ? 44 : 34, borderRadius: 12, background: tone.bd, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          {served ? <I.checkCircle size={big ? 26 : 20} /> : <I.x size={big ? 24 : 18} />}
-        </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: big ? 18 : 15, color: tone.fg }}>
-            {served ? (o.data.is_extra ? "Phát suất phát sinh" : "Phát thành công") : DENIED_TITLE[o.result]}
-            {o.duplicate && <span style={{ fontSize: 11.5, fontWeight: 600, marginLeft: 8, opacity: 0.8 }}>(quẹt đúp)</span>}
-          </div>
-          <div style={{ fontSize: 12, color: "var(--fg-3)" }}>{e.at}{shift ? ` · ${shift}` : ""}</div>
-        </div>
-      </div>
-      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 3 }}>
-        <div style={{ fontWeight: 700, fontSize: big ? 16 : 14 }}>
-          {name ?? "—"} <span style={{ color: "var(--fg-3)", fontWeight: 500, fontSize: 12.5 }}>· {code}</span>
-        </div>
-        {dept && <div style={{ fontSize: 12.5, color: "var(--fg-3)" }}>{dept}</div>}
-        {dish && <div style={{ fontSize: big ? 14.5 : 13, marginTop: 2 }}><span style={{ color: "var(--fg-3)" }}>Món: </span><b>{dish}</b></div>}
-        {!served && <div style={{ fontSize: 13, color: tone.fg, marginTop: 4, lineHeight: 1.4 }}>{o.message}</div>}
-      </div>
-    </div>
-  );
+  const d = o.kind === "served" ? o.data : o.details;
+  const base = { id: e.id, at: e.at, name: d?.employee_name, code: d?.employee_code ?? e.value, dept: d?.department, shift: d?.meal_time_name, dish: d?.food_name };
+  if (o.kind === "served") return { ...base, tone: "ok", title: o.duplicate ? "Quẹt đúp, đã phát trước đó" : o.data.is_extra ? "Đã phát suất phát sinh" : "Đã phát" };
+  return { ...base, tone: o.result === "already_picked" ? "warn" : "bad", title: DENIED_TITLE[o.result], detail: o.message };
 }
 
 function ScanScreen() {
@@ -103,7 +78,8 @@ function ScanScreen() {
     <div style={{ height: "100%", background: "var(--bg-page)", display: "flex", flexDirection: "column" }}>
       <ScreenHeader
         title="Quét thẻ phát suất ăn"
-        subtitle={served ? `Phiên này đã phát ${served} suất` : "Quầy phát — thẻ NV hoặc mã QR trong app"}
+        subtitle={served ? `Phiên này đã phát ${served} suất` : "Quét thẻ nhân viên hoặc mã QR trong app"}
+        onBack={() => navigate("/profile")}
         right={
           boot?.staff?.canKitchen ? (
             <button
@@ -115,11 +91,12 @@ function ScanScreen() {
           ) : undefined
         }
       />
-      <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 24px" }} className="no-scrollbar">
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px calc(var(--safe-bottom) + 24px)" }} className="no-scrollbar">
         <button
           onClick={openCamera}
           disabled={busy}
-          style={{ width: "100%", height: 150, borderRadius: 20, border: "none", background: "var(--fd-wd-solid)", color: "var(--fd-wd-on-solid)", boxShadow: "0 14px 30px -16px color-mix(in srgb, var(--fd-wd-solid) 70%, transparent)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", position: "relative", overflow: "hidden" }}
+          className="ge-dots"
+          style={{ ["--ge-dot-ink" as string]: "#ffffff", ["--ge-dot-alpha" as string]: "20%", width: "100%", height: 150, borderRadius: 20, border: "none", background: "var(--fd-wd-solid)", color: "var(--fd-wd-on-solid)", boxShadow: "0 14px 30px -16px color-mix(in srgb, var(--fd-wd-solid) 70%, transparent)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", position: "relative", overflow: "hidden" }}
         >
           <span style={{ width: 62, height: 62, borderRadius: 18, border: "3px solid rgba(255,255,255,0.85)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <I.scan size={32} />
@@ -144,18 +121,14 @@ function ScanScreen() {
 
         {latest && (
           <div style={{ marginTop: 16 }}>
-            <ResultCard e={latest} big />
+            <LatestResult v={viewOf(latest)} />
           </div>
         )}
 
         {rest.length > 0 && (
           <>
-            <div style={{ fontWeight: 700, fontSize: 14, fontFamily: "var(--font-display)", margin: "20px 2px 10px", color: "var(--fg-2)" }}>Lượt quét trước</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {rest.map((e) => (
-                <ResultCard key={e.id} e={e} />
-              ))}
-            </div>
+            <div style={{ fontWeight: 700, fontSize: 14.5, fontFamily: "var(--font-display)", margin: "20px 2px 4px", color: "var(--fg-1)" }}>Lượt quét trước</div>
+            <ResultLog items={rest.map(viewOf)} />
           </>
         )}
         {entries.length === 0 && (

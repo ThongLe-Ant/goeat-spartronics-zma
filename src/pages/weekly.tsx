@@ -176,23 +176,23 @@ export default function WeeklyPage() {
               if (on) {
                 if (kind === "sat") {
                   bg = "linear-gradient(180deg, #d99b00 0%, #b28900 100%)";
-                  border = "1.5px solid #806200";
-                  shadow = "0 3px 9px -1px rgba(178, 137, 0, 0.45)";
+                  border = "1px solid #806200";
+                  shadow = "0 3px 9px -1px rgba(178, 137, 0, 0.35)";
                 } else if (kind === "sun") {
                   bg = "var(--fd-sun-solid)";
-                  border = "1.5px solid var(--fd-sun-deep)";
-                  shadow = "0 3px 9px -1px rgba(186, 26, 26, 0.4)";
+                  border = "1px solid var(--fd-sun-deep)";
+                  shadow = "0 3px 9px -1px rgba(186, 26, 26, 0.3)";
                 } else {
                   bg = "var(--fd-wd-solid)";
-                  border = "1.5px solid var(--fd-wd-solid)";
-                  shadow = "0 3px 9px -1px rgba(20, 114, 76, 0.35)";
+                  border = "1px solid var(--fd-wd-solid)";
+                  shadow = "0 3px 9px -1px rgba(20, 114, 76, 0.3)";
                 }
                 labelColor = "#ffffff";
                 numColor = "#ffffff";
                 dotColor = "#ffffff";
               } else if (d.isToday) {
                 bg = "var(--fd-accent-tint)";
-                border = "1.5px solid var(--fd-accent-solid)";
+                border = "1px solid var(--fd-accent-solid)";
                 labelColor = "var(--fd-accent-ink)";
                 numColor = "var(--fd-accent-ink)";
                 dotColor = "var(--fd-accent-solid)";

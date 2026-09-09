@@ -409,7 +409,9 @@ Chạy `pnpm prisma:deploy` trên server (không migrate dev).
 ### 10.3 Còn lại để lên live (cần anh quyết)
 1. Deploy code `tanloc-spartronics` hiện tại lên `tanloc-spartronics.goeat.vn` (§7.0), `pnpm prisma:deploy`,
    đặt `ZALO_APP_SECRET` + `ZMA_TOKEN_SECRET` (+ `ZMA_DEV_LOGIN=1` nếu muốn thử bằng mã NV).
-2. Trên Zalo Developers: app `2600294893392654695` bật quyền SĐT (`scope.userPhonenumber`), lấy App Secret.
+2. Trên Zalo Developers: app `2600294893392654695` bật quyền SĐT (`scope.userPhonenumber`), lấy App Secret,
+   khai domain gọi API `tanloc-spartronics.goeat.vn`. OA ID = `3436289450962234133` (đã điền vào
+   `app-config.json` ngày 2026-09-09; trước đó là placeholder `YOUR_OA_ID`).
 3. ZMA: `VITE_API_MODE=live`, thử trong simulator bằng `VITE_DEV_EMPLOYEE_CODE`, rồi `zmp deploy` bản testing.
 4. Chưa làm: đặt nhóm (§2b), QR token ký (§3), thông báo trước giờ chốt.
 
@@ -618,3 +620,601 @@ T6 11/09 (Ca 1 chốt 11:30 hôm nay), **không chạm gì cả**, chạy đồn
 
 Hồi quy: `npx tsc --noEmit` sạch; 8 route (`/`, `/weekly`, `/orders`, `/qr`,
 `/profile`, `/admin/{scan,kitchen,profile}`) render đủ, **0 lỗi console**.
+
+## 11.6 Chế độ Quầy & Bếp: gác theo quyền + lối ra 2026-09-09
+
+Anh báo hai điểm: (1) chế độ quầy/bếp phải có quyền mới thấy, (2) vào rồi không
+có đường về chế độ nhân viên.
+
+| Chỗ | Trước | Sau |
+| --- | --- | --- |
+| Thẻ vào ở `/profile` | đã gác sẵn theo `staff.canScan \|\| canKitchen` | giữ nguyên |
+| Tab dưới của chế độ quầy | **luôn** hiện `Quét thẻ · Bếp · Cá nhân` | lọc theo quyền: `canScan` ⇒ Quét thẻ, `canKitchen` ⇒ Bếp |
+| `/admin` | `Navigate` cứng sang `/admin/scan` | `AdminEntry` chọn màn NV thực sự có quyền, không có quyền thì về `/profile` |
+| `/admin/profile` | lặp lại thẻ "Chế độ Quầy & Bếp" (bấm vào quay lại chính chế độ đó) | thành **"Về chế độ nhân viên"** ➝ `/` |
+
+`ADMIN_TABS` nay có trường `need?: "canScan" | "canKitchen"`; chưa biết quyền
+(`boot` còn null) thì **chưa** hiện tab, tránh nháy ra rồi mất. Tab Cá nhân không
+gác — đó chính là lối ra.
+
+Kiểm chứng bằng cách tạm đổi `staff` trong `mockBootstrap` (đã trả lại
+`{canScan:true, canKitchen:true}` sau khi thử):
+
+| `staff` | `/profile` | Vào chế độ | Tab dưới | `/admin` |
+| --- | --- | --- | --- | --- |
+| scan+kitchen | thẻ "Chế độ Quầy & Bếp" | `/admin/scan` | Quét thẻ · Bếp · Cá nhân | `/admin/scan` |
+| chỉ kitchen | thẻ, phụ đề chỉ "Bảng bếp hôm nay" | `/admin/kitchen` | **Bếp · Cá nhân** | `/admin/kitchen` |
+| không quyền | **không có thẻ** | — | — | ➝ `/profile` |
+
+Gõ tay `/admin/scan` khi không có quyền vẫn ra tường "Chưa được cấp quyền" của
+`StaffGuard` (tab dưới còn mỗi Cá nhân). Vòng ra/vào đủ: `/profile` ➝ `/admin/scan`
+➝ tab Cá nhân ➝ "Về chế độ nhân viên" ➝ `/`. `npx tsc --noEmit` sạch, 0 pageerror.
+
+---
+
+## 11.7. Chế độ Quầy & Bếp: PHÁT MÓN NGOẠI LỆ (2026-09-09)
+
+Port chức năng "phát ngoại lệ" của app web spartronics (`/pickup/manual`) sang Mini App.
+
+**Vì sao có:** người thật đứng trước quầy thì phải được ăn kể cả khi hệ thống không dự
+báo suất cho họ (chấm công chưa về, đổi ca đột xuất, khách) — nhưng lối đi đó phải có
+NGƯỜI BẤM, có LÝ DO và để lại dấu (§16, §17.3, §21).
+
+**Quyền riêng.** `manual-dispense:create`, KHÔNG dùng chung `pickup:process`: quét thẻ chỉ
+đóng dấu lên suất đã có, còn đây là TẠO suất ngoài dự báo. `StaffAccess` do đó có cờ thứ ba
+`canManual`.
+
+### BFF (`../tanloc-spartronics`) — đã viết, CHƯA deploy
+| Tệp | Thay đổi |
+| --- | --- |
+| `src/modules/zma/types.ts` | `ZmaStaffAccess` thêm `canManual` |
+| `src/modules/zma/services/zma-employee.service.ts` | `staffAccessFor` thêm `checkPermission(session, "manual-dispense", "create")` |
+| `src/app/api/zma/staff/manual/route.ts` (mới) | `GET` (lý do + món, hoặc `?q=` tra cứu NV) gác `manual-dispense:view`; `POST` phát ngoại lệ gác `manual-dispense:create`, gọi thẳng `dispenseManualPickup`, phát `emitPickupEvent`, 409 khi `PickupError` |
+
+Route dùng lại nguyên bộ nghiệp vụ của web (`dispenseManualPickup`, `listManualReasons`,
+`listManualDishOptions`, `searchEmployeesForTemporaryCard`) — không nhân bản luật.
+Ô tra cứu NV gác bằng `manual-dispense:view` chứ không phải `temp-card-issue:view` như web,
+vì ở Mini App nó chỉ tồn tại để nạp cho đúng form này.
+
+### ZMA (`goeat-zma`)
+| Tệp | Thay đổi |
+| --- | --- |
+| `src/api/types.ts` | `StaffAccess.canManual`; thêm `ManualReason`, `ManualDish`, `ManualMeta`, `ManualEmployeeHit`, `ManualDispenseInput`, `ManualDispenseResult`, `ManualOutcome` |
+| `src/api/staff.ts` | `fetchManualMeta()`, `searchEmployees(q)`, `dispenseManual(input)` — cùng kiểu 200/409 như `scanCard` |
+| `src/api/mock/staff.mock.ts` | `mockManualMeta` / `mockSearchEmployees` / `mockManualDispense`; nhánh NV mẫu ghi thẳng vào kho đơn nên bảng bếp và thẻ QR cùng nhảy; trần 5 suất phát sinh/ngày |
+| `src/pages/admin/manual.tsx` (mới) | 2 bước: chọn người (NV hoặc suất phát sinh) ➝ lý do (bắt buộc) + món thay thế + ghi chú; lịch sử phát trong phiên |
+| `src/router.tsx` | route `/admin/manual`; `AdminEntry` rơi về `/admin/manual` nếu chỉ có mỗi quyền này |
+| `src/components/footer.tsx` | tab "Ngoại lệ" (`need: "canManual"`); `need` mở rộng thành `keyof StaffAccess` |
+| `src/components/staff-guard.tsx` | `PERM_LABEL` thay câu điều kiện 2 nhánh — thêm nhánh `canManual` |
+| `src/pages/admin/{manual,scan}.tsx` | đáy vùng cuộn `calc(var(--safe-bottom) + 112px)`: nút "Phát suất ngoại lệ" trước đó nằm KHUẤT dưới dock (Playwright không bấm được) |
+
+### Kiểm chứng (mock, Playwright)
+| Việc | Kết quả |
+| --- | --- |
+| Tìm "Bích" ➝ chọn ➝ lý do "Chưa có dữ liệu chấm công" + món thay thế | ✅ "Đã phát ngoại lệ · Trần Thị Bích · SP04901 · Món: Gà rô ti + bắp cải xào", form tự dọn |
+| Phát lại đúng người đó | ✅ từ chối "Đã nhận rồi" — ngoại lệ không phải cửa nhận hai lần |
+| Suất phát sinh (Khách, có nhãn + bộ phận) | ✅ "Đã phát suất phát sinh · EXTRA · còn 4 suất phát sinh" |
+| Phát cho NV mẫu SP04821 ➝ mở bảng bếp | ✅ 347→348 suất, đã phát 58→59, Mặn 1 96/97→97/98 |
+| Nút "Phát" khi chưa chọn lý do | ✅ disabled + dòng nhắc "Phải chọn lý do trước khi phát." |
+| Tạm gỡ `canManual` trong mock | ✅ dock còn "Quét thẻ / Bếp / Cá nhân"; vào thẳng `/admin/manual` ra tường "cần quyền Phát ngoại lệ (manual-dispense:create)" |
+
+`npx tsc --noEmit` sạch ở CẢ HAI repo. Chưa deploy, chưa chạy migration, chưa commit.
+
+---
+
+## 12. Vai trò × chức năng: đối chiếu web ➝ ZMA và kế hoạch bổ sung (2026-09-09)
+
+### 12.1. Sự thật gốc: Permission Registry của web
+
+Nguồn: `../tanloc-spartronics/src/configs/permissions/*.permissions.ts`.
+`defaultGrants` dùng **mã vai trò** (`admin` / `manager` / `staff` / `kitchen`) mà
+`scripts/rbac-sync.ts` chỉ cấp NẾU vai trò đó đã tồn tại trong bảng `roles` — tức
+danh sách vai trò thật do quản trị tạo, không seed trong code.
+
+➜ **Hệ quả cho ZMA: tuyệt đối không hard-code mã vai trò.** Bootstrap phải suy ra
+cờ năng lực từ `checkPermission(session, resource, action)` như `staffAccessFor`
+đang làm. Đổi tên vai trò trên web thì Mini App vẫn đúng.
+
+| Resource:action | admin | manager (nhân sự) | staff (nhân viên) | kitchen (bếp) | ZMA hôm nay |
+| --- | :-: | :-: | :-: | :-: | --- |
+| `ordering:view/create/delete/batch-order` | ✓ | ✓ | ✓ | view | ✅ `/weekly`, `/orders`, `/qr` |
+| `ordering:proxy-order` — đặt món **thay người khác** | ✓ | ✓ | — | — | ❌ **thiếu** |
+| `meal-registrations:view` — xem đăng ký cả nhà máy | ✓ | ✓ | — | ✓ | ❌ **thiếu** |
+| `meal-registrations:update` — **sửa đăng ký** người khác | ✓ | ✓ | — | — | ❌ **thiếu** |
+| `meal-registrations:export/import` | ✓ | ✓ | — | export | ⛔ giữ trên web |
+| `pickup:view` — bảng bếp | ✓ | ✓ | — | ✓ | ✅ `/admin/kitchen` |
+| `pickup:process` — quét thẻ phát | ✓ | ✓ | — | ✓ | ✅ `/admin/scan` |
+| `manual-dispense:view/create` — phát ngoại lệ | ✓ | ✓ | — | ✓ | ✅ `/admin/manual` (§11.7) |
+| `report:view/export` — báo cáo căn-tin | ✓ | ✓ | — | ✓ | ❌ **thiếu** |
+| `temp-card-issue:view` + `pickup:assign-temp-card` — cấp thẻ tạm | ✓ | ✓ | — | ✓ | ❌ (tuỳ chọn) |
+| `temp-card-inventory:*`, cấu hình, phân quyền, thực đơn tuần | ✓ | ✓ | — | — | ⛔ giữ trên web |
+
+Chốt lại đúng như nhận xét: **nhân sự (`manager`) là nhóm duy nhất chưa có gì
+trong Mini App** ngoài phần dùng chung với nhân viên. Bếp thì thiếu mỗi báo cáo.
+
+**Một điểm lệch trong registry (không gây lỗi, nên biết):** phát ngoại lệ được khai
+báo ở HAI chỗ — action `pickup:manual` và resource `manual-dispense:view/create`.
+Route thật (`/api/pickup/manual`) gác bằng `manual-dispense:create`, và ZMA đã bám
+theo route. `pickup:manual` là mã thừa; đừng cấp quyền theo nó.
+
+### 12.2. Ba cấp năng lực trong `StaffAccess` sau khi bổ sung
+
+```ts
+canScan       // pickup:process             — quét thẻ phát suất        ✅
+canKitchen    // pickup:view                — bảng bếp hôm nay          ✅
+canManual     // manual-dispense:create     — phát ngoại lệ             ✅
+canProxy      // ordering:proxy-order       — ĐĂNG KÝ HỘ                ← mới
+canRegView    // meal-registrations:view    — xem đăng ký nhà máy       ← mới
+canRegEdit    // meal-registrations:update  — SỬA đăng ký người khác    ← mới
+canReport     // report:view                — báo cáo căn-tin           ← mới
+```
+
+Admin không cần cờ riêng: vai trò `admin` được cấp `*` nên bật hết cờ một cách
+tự nhiên — đúng nghĩa "toàn quyền" mà không phải viết nhánh đặc biệt nào.
+
+### 12.3. Giai đoạn 1 — NHÂN SỰ: đăng ký hộ + sửa đăng ký (ưu tiên cao nhất)
+
+Web có hai đường riêng biệt, ZMA nên giữ nguyên sự tách bạch đó:
+
+| Việc | Web | Vì sao tách |
+| --- | --- | --- |
+| **Đăng ký hộ** cả tuần | `POST /api/ordering/proxy` (`ordering:proxy-order`) | "Đặt giúp người chưa/không dùng app" — cùng luật hạn chốt như tự đặt |
+| **Sửa đăng ký** một ngày | `GET/PUT /api/ordering/day-registration` (`meal-registrations:view/update`) | "Sửa dòng đã có của cả nhà máy" — đổi ca, đổi món, qua đủ bộ luật |
+
+**BFF (`../tanloc-spartronics`)** — bọc lại service sẵn có, không viết lại luật:
+
+| Route mới | Gác | Gọi vào |
+| --- | --- | --- |
+| `GET /api/zma/staff/employees?q=` | `ordering:proxy-order` **hoặc** `meal-registrations:view` | `findEmployeeByCode` / tìm theo mã–tên |
+| `GET /api/zma/staff/week-menu?employeeId=` | `ordering:proxy-order` | `getWeeklyMenuForOrdering(targetId)` |
+| `POST /api/zma/staff/proxy-order` | `ordering:proxy-order` | `batchPlaceOrUpdateOrders(targetId, save, del, session.user.id)` |
+| `GET/PUT /api/zma/staff/day-registration` | `meal-registrations:view` / `:update` | `getDayRegistrationBoard` / `saveDayRegistrations` |
+
+`zmaStaffHandler` chỉ nhận MỘT cặp resource:action, nên route `employees` cần một
+biến thể chấp nhận "một trong hai quyền" — thêm `zmaStaffHandlerAny(fn, perms[])`
+cạnh nó, đừng nới lỏng cái đang có.
+
+**ZMA (`goeat-zma`)**
+
+| Tệp | Việc |
+| --- | --- |
+| `src/api/types.ts` | 4 cờ mới + `ProxyEmployee`, `DayRegistrationBoard` |
+| `src/api/staff.ts` + `mock/staff.mock.ts` | 4 hàm mới + mock tương ứng |
+| `src/pages/admin/proxy.tsx` (mới) | Chọn NV ➝ lưới tuần. **Tái dùng `DayCard` NGUYÊN VẸN** |
+| `src/pages/admin/registrations.tsx` (mới) | Chọn NV + ngày ➝ 3 ca ➝ sửa/đổi ca |
+| `src/state/proxy-ordering.ts` (mới) | `useProxyWeekMenu(employeeId)` |
+
+**Bẫy phải tránh:** `useWeekMenu` đọc/ghi atom jotai **toàn cục** gắn với chính
+người đang đăng nhập. Dùng lại nó cho đặt hộ sẽ **ghi đè lịch của chính nhân sự
+đó** trên tab `/weekly`. Hook đặt hộ phải giữ state cục bộ, chỉ dùng chung
+component hiển thị. Và không sửa `src/pages/weekly.tsx` — trang đó đã chốt.
+
+**Bắt buộc về UI:** khi đang thao tác hộ, luôn có một dải cảnh báo dính trên đầu
+màn — "Đang đặt hộ **Trần Thị Bích · SP04901**" kèm nút thoát. Đặt nhầm người là
+lỗi tốn cơm thật và rất khó lần ra.
+
+### 12.4. Giai đoạn 2 — QUẢN LÝ BẾP: báo cáo phát món
+
+Web có 6 báo cáo (`by-date`, `by-shift`, `meal-day`, `orders`, `pickup`, `switch`).
+Không bê cả 6 lên điện thoại. Lấy đúng câu hỏi người phụ trách ca hỏi khi đứng
+trong bếp:
+
+- `GET /api/zma/staff/report/meal-day?date=` ➝ `getMealDayReport` (`report:view`) —
+  "hôm đó bếp nấu bao nhiêu, quầy phát tới đâu", tách theo Ca × Món.
+- Màn `/admin/report`: chọn ngày (mặc định hôm nay), KPI tổng đăng ký / đã phát /
+  tỷ lệ, tách theo ca, và **số suất ngoại lệ** để thấy ngay ca mình phát bao nhiêu
+  suất ngoài dự báo.
+- Khác `/admin/kitchen` ở chỗ: bảng bếp là realtime **chỉ hôm nay**; báo cáo là
+  **xem lại** và chọn được ngày.
+- Không làm xuất Excel trên điện thoại — `report:export` giữ trên web.
+
+### 12.5. Giai đoạn 3 — tuỳ chọn: cấp thẻ tạm
+
+`temp-card-issue:view` + `pickup:assign-temp-card`: quét mã thẻ nhựa rồi gán cho
+NV. Việc này hợp điện thoại hơn hẳn web (đang đứng cạnh người cần cấp), nhưng
+không phải nhóm nào cũng cần — chỉ làm khi có yêu cầu thật.
+
+**Dứt khoát KHÔNG đưa lên Mini App:** import/export Excel, kho thẻ tạm, cấu hình
+đặt suất, phân quyền, soạn thực đơn tuần. Màn hình 6 inch không phải chỗ nhập
+liệu hàng loạt, và mọi thứ này đều có sẵn trên web.
+
+### 12.6. Điều hướng: 7 chức năng không nhét vừa 1 dock
+
+Nhân sự (`manager`) sẽ có ĐỦ cả 7 cờ. Dock 5 tab hiện tại không chứa nổi.
+
+**Đề xuất:** `/admin` đổi từ trang chuyển hướng thành **trung tâm** — lưới thẻ
+liệt kê đúng những chức năng người đó có quyền (Quét thẻ · Phát ngoại lệ · Bảng
+bếp · Báo cáo · Đăng ký hộ · Sửa đăng ký). Dock rút còn 4 tab cố định:
+**Trung tâm · Quét thẻ · Đăng ký · Cá nhân**, tab nào không có quyền thì ẩn như
+hiện nay. Bếp thuần vẫn thấy đúng 3 thẻ, không loãng.
+
+## 12.7. Đã làm 2026-09-09 — GIAI ĐOẠN 1 (nhân sự): đặt hộ + sửa đăng ký + trung tâm `/admin`
+
+Làm đúng phạm vi §12.3 + §12.6 anh đã chọn. **Chưa deploy, chưa chạy migration,
+chưa commit.** Chạy được ngay ở chế độ mock.
+
+### Hai đường, cố ý KHÔNG gộp
+
+| | Đặt món hộ | Sửa đăng ký |
+|---|---|---|
+| Quyền | `ordering:proxy-order` (`canProxy`) | `meal-registrations:view` / `:update` (`canRegView` / `canRegEdit`) |
+| Đơn vị | cả tuần | một ngày |
+| Đường ghi | `batchPlaceOrUpdateOrders` — y như nhân viên tự đặt | `saveDayRegistrations` — transaction cả ngày |
+| Mốc chặn | **hạn chốt 48h của nhân viên** | **chính bữa ăn** (xong bữa mới khoá) |
+| Dùng khi | đặt trước cho người không dùng điện thoại | việc phát sinh **sau** hạn chốt: điều tăng ca, nghỉ đột xuất |
+
+Gộp lại thì hoặc chặn oan nhân sự (áp 48h vào màn sửa ⇒ chỉ sửa được chuyện của
+hai ngày sau, tức là không sửa được việc nào có thật), hoặc cho nhân viên đặt
+quá hạn. Quá 48h ở màn sửa chỉ là **cảnh báo vàng** ("bếp nấu theo số cũ, nhớ
+báo bếp"); quá mốc bếp chốt số là **cảnh báo đỏ**; khoá cứng chỉ khi bữa đã xong
+hoặc suất đã nhận cơm.
+
+### BFF (`../tanloc-spartronics`) — đã viết, type-check sạch, CHƯA deploy
+
+- `src/modules/zma/types.ts` — `ZmaStaffAccess` thêm `canProxy` / `canRegView` / `canRegEdit`.
+- `src/modules/zma/services/zma-employee.service.ts` — `staffAccessFor` trả 6 cờ, đều qua `checkPermission`, không hard-code mã vai trò.
+- `src/modules/zma/api/handler.ts` — CORS thêm `PUT` (màn sửa ghi cả ngày bằng PUT như web); thêm `zmaStaffHandlerAny(fn, perms[])` cho route phục vụ NHIỀU màn. **Không nới `zmaStaffHandler` thành nhận mảng.**
+- `GET /api/zma/staff/employees?q=` — tra nhân viên, đủ MỘT trong hai quyền.
+- `GET /api/zma/staff/week-menu?employeeId=` — thực đơn tuần của người khác (`ordering:proxy-order`). Cố ý tách khỏi `/api/zma/week-menu`: thêm `employeeId` vào đó là mở toang cả nhà máy.
+- `POST /api/zma/staff/proxy-order` — `batchPlaceOrUpdateOrders(target, …, session.user.id)`.
+- `GET|PUT /api/zma/staff/day-registration` — `getDayRegistrationBoard` / `saveDayRegistrations`, lỗi trả nguyên câu tiếng Việt của service.
+
+### ZMA (`goeat-zma`)
+
+- `src/api/types.ts` — `StaffAccess` +3 cờ; `ManualEmployeeHit` ➝ `StaffEmployeeHit` (dùng chung 3 màn); thêm `RegistrationBoard` / `RegistrationOrder` / `RegistrationShiftState` / `RegistrationPick` / `RegistrationSaveResult`, hình dạng ĐÚNG như `DayRegistrationBoard` của web để BFF trả thẳng, không map lại.
+- `src/api/hr.ts` (mới) — cổng 5 hàm; `src/api/mock/hr.mock.ts` (mới) dùng lại nguyên bộ máy `ordering.mock`.
+- `src/api/mock/ordering.mock.ts` — kho đơn tách theo người: `storeOf(employeeId)` / `saveOf(employeeId)`. Nhân sự sửa cho người khác thì đơn của chính mình không suy suyển (người thật ⇒ localStorage, đồng nghiệp ⇒ bộ nhớ phiên).
+- `src/state/proxy-ordering.ts` (mới) — `useProxyWeek`. **KHÔNG dùng lại `useWeekMenu`**: hook đó ghi vào atom jotai tầm module, mở lịch của A xong thì trang `/weekly` của chính nhân sự sẽ hiện đơn của A và cú chạm sau lưu nhầm người. Ở đây state cục bộ, đổi người là xoá sạch trước khi nạp.
+- `src/components/admin/employee-picker.tsx` (mới) — `EmployeePicker` + `TargetBanner`. Đặt nhầm người là mất một suất cơm thật: chưa chọn ai thì không hiện màn sửa, chọn rồi thì tên DÍNH `sticky` trên đầu kèm nút "Đổi".
+- `src/components/admin/proxy-day-card.tsx` (mới) — thẻ ngày prop-driven, dùng lại `DishSlot` / `ShiftChips` / `.ge-daycard` của trang đặt món (KHÔNG sửa `src/components/ordering/*`). `DayCard` gốc tự gọi `useWeekMenu()` nên không tái dùng được.
+- `src/pages/admin/proxy.tsx`, `src/pages/admin/registrations.tsx` (mới).
+- `src/pages/admin/hub.tsx` (mới) — `/admin` từ trang chuyển hướng thành **trung tâm**: lưới thẻ lọc theo quyền + lối ra "Về suất ăn của tôi". Cuộn cả trang như trang Hôm nay (chỉ cuộn phần dưới thì lưới kéo lên âm 46px bị mép trên cắt mất).
+- `src/components/footer.tsx` — dock chế độ nhân sự còn **Trung tâm · Quét thẻ · Đăng ký · Cá nhân**; Bếp và Phát ngoại lệ chuyển vào trung tâm.
+- `src/pages/profile/index.tsx` — lối vào chế độ nhân sự nay xét **bất kỳ** cờ nào (trước chỉ `canScan || canKitchen`, nên người chỉ có quyền đặt hộ / sửa đăng ký không bao giờ thấy lối vào) và trỏ về `/admin`.
+- `src/components/staff-guard.tsx` — thêm nhãn 3 quyền mới.
+
+### Kiểm chứng (mock, Playwright, `localhost:2999`)
+
+`npx tsc --noEmit` sạch ở cả hai repo. Không có lỗi console.
+
+- `/admin` hiện đủ 5 thẻ theo quyền; dock đúng 4 tab; `/profile` ➝ "Chế độ nhân sự" ➝ `/admin`.
+- Đặt hộ Trần Thị Bích T2 tuần sau ➝ "Đã lưu cho nhân viên"; mở `/weekly` của chính mình: **không đổi** (đúng cái bẫy jotai đã tránh).
+- Ngày hôm nay quá hạn 48h ⇒ ô đặt hộ khoá kèm câu chỉ đường sang Sửa đăng ký.
+- Sửa đăng ký 09/09: cả 3 ca hiện cảnh báo vàng "đã qua hạn chốt … nhớ báo bếp" nhưng **vẫn sửa được**; chọn món ➝ "Lưu thay đổi" ➝ toast "Đã thêm 1 suất."
+- Ngày 07/09 (bữa đã xong): cảnh báo đỏ "bữa ăn ngày 07/09/2026 đã xong lúc 12:30 — không sửa được nữa", không ô nào bấm được.
+
+### Chưa làm (chưa được duyệt)
+
+Hết — giai đoạn 3 (cấp thẻ tạm, §12.5) đã làm ở §12.9.2. Ranh giới §12.5 giữ
+nguyên: import/export Excel, **kho thẻ tạm**, cấu hình đặt suất, phân quyền,
+soạn thực đơn tuần **không** lên Mini App.
+
+---
+
+## 12.8. Đã làm 2026-09-09 — GIAI ĐOẠN 2 (bếp / quản lý): BÁO CÁO PHÁT MÓN
+
+Làm đúng phạm vi §12.4. **Chưa deploy, chưa chạy migration, chưa commit.** Chạy
+được ngay ở chế độ mock.
+
+### Vì sao là màn RIÊNG, không nhét vào Bảng bếp
+
+| | Bảng bếp `/admin/kitchen` | Báo cáo `/admin/report` |
+|---|---|---|
+| Quyền | `pickup:view` (`canKitchen`) | `report:view` (`canReport`) |
+| Ngày | **hôm nay**, cứng | **chọn ngày bất kỳ** |
+| Nhịp | tự làm mới 30 giây | đọc một lần, có nút tải lại |
+| Dùng khi | đang đứng quầy phát cơm | đối soát với nhà máy, xem lại ngày đã qua |
+
+Hai câu hỏi khác nhau nên hai quyền khác nhau — nhà máy có người chỉ được xem
+báo cáo mà không đứng quầy, và ngược lại.
+
+### Một hệ số học duy nhất, giữ nguyên như web
+
+```
+Dự trù − Loại trừ = Thực nấu = Đã phát + Chưa nhận
+Phát ngoại lệ nằm NGOÀI dự trù — cộng riêng, KHÔNG trộn vào Thực nấu.
+```
+
+Vì thế "Phát ngoại lệ" luôn ở **thẻ riêng**, và trong thẻ ca nó nằm ở hàng dưới
+cùng chứ không bao giờ cộng vào ô Thực nấu. Trộn hai con số là hỏng luôn bản đối
+soát với nhà máy.
+
+### BFF (`../tanloc-spartronics`) — đã viết, type-check + lint sạch, CHƯA deploy
+
+- `src/modules/zma/types.ts` — `ZmaStaffAccess` thêm `canReport`.
+- `src/modules/zma/services/zma-employee.service.ts` — `staffAccessFor` trả 7 cờ; `canReport = checkPermission(session, "report", "view")`.
+- `src/modules/zma/services/zma-report.service.ts` (mới) — `getZmaMealDayReport(date)` là **bản CHIẾU** của `getMealDayReport`, không phải bản sao: mọi phép đếm vẫn nằm ở `modules/report`, ở đây chỉ đổi sang `snake_case` và cắt bớt. **Bỏ hẳn mảng `employees`** (từng người + timeline, mỗi ngày vài nghìn dòng) — muốn tra từng người thì mở web.
+- `GET /api/zma/staff/report/meal-day?date=` (mới) — gác `report:view`. **Không có `export`**: `report:export` giữ trên web, không ai xuất Excel trên điện thoại rồi gửi đi được.
+
+### ZMA (`goeat-zma`)
+
+- `src/api/types.ts` — `StaffAccess` thêm `canReport`; thêm `MealDayReport` / `ReportShift` / `ReportDish`, hình dạng đúng payload BFF để trả thẳng, không map lại.
+- `src/api/report.ts` (mới) — `fetchMealDayReport(date)`.
+- `src/api/mock/report.mock.ts` (mới) — số giả nhưng **tự nhất quán**: mọi con số suy ra từ `forecast` bằng đúng các phép trừ của server, nếu không thì lúc thử màn hình sẽ tưởng mình tính sai công thức. Chủ nhật trả ngày rỗng; ngày mai `roster_pushed = false` để thấy nhãn "đang là số dự trù"; mốc chốt bếp giả cố định 90 phút trước giờ ăn (server thật đọc `cook_lock_minutes_before_start`); suất của chính NV mẫu được cộng vào để đặt món / quét thẻ xong mở báo cáo thấy số nhảy.
+- `src/pages/admin/report.tsx` (mới) — dải 14 ngày (11 ngày đã qua + hôm nay + 2 ngày tới, tự cuộn tới hôm nay), KPI ngày, thẻ ngoại lệ riêng, thẻ từng ca có nút mở chi tiết Ca × Món. Ngày chưa tới thì nhãn đổi "Chưa nhận" ➝ "Chưa phát" (bữa còn chưa diễn ra, gọi là "chưa nhận" là nói sai) và thẻ ngoại lệ ẩn hẳn khi chưa phát suất nào.
+- `src/router.tsx` — `/admin/report`; `src/pages/admin/hub.tsx` — thẻ thứ 6 `need: "canReport"`; `src/components/staff-guard.tsx` — nhãn `report:view`; `src/pages/profile/index.tsx` — dòng tóm tắt quyền thêm "Báo cáo".
+- **Dock giữ nguyên 4 tab** — việc thứ 6 vào trung tâm, không nới thanh điều hướng (đúng lý do §12.7 dựng trung tâm).
+
+### Kiểm chứng (mock, Playwright, `localhost:2999`)
+
+`npx tsc --noEmit` sạch ở cả hai repo, `eslint` sạch ở BFF, 0 lỗi console.
+
+- Hôm nay 09/09: Dự trù 351 − Loại trừ 18 = Thực nấu 333 = Đã phát 57 + Chưa nhận 276; Bếp phải ra 340 = 333 + 7 suất phát sinh. Cộng từng ca đúng bằng tổng.
+- Ca 1 "Đã chốt 10:00" (11:30 − 90′), Ca 2/Ca 3 "Chốt lúc 16:00 / 21:30" — đúng trạng thái theo đồng hồ.
+- Mở "Chi tiết 4 món": từng dòng Ca × Món có thực nấu / đã phát / loại trừ.
+- 07/09 (đã qua): 97% đã phát, còn 9 suất chưa nhận.
+- 11/09 (chưa tới): dải vàng "Chưa có danh sách nhà máy cho Ca 1, Ca 2, Ca 3", mỗi ca thêm dòng "đang là số dự trù", nhãn "Chưa phát", thẻ ngoại lệ ẩn.
+- 06/09 (chủ nhật): "Ngày này bếp không nấu — không có suất nào."
+- `/admin` nay 6 thẻ, xếp 3 hàng × 2 cột, không tràn.
+
+---
+
+## 12.9. Đã làm 2026-09-09 — BỎ "CHẾ ĐỘ NHÂN SỰ" + GIAI ĐOẠN 3: CẤP THẺ TẠM
+
+### 12.9.1. Sửa kiến trúc điều hướng: không còn "chế độ", chỉ còn MENU theo quyền
+
+Nhận xét của người dùng (2026-09-09): *"thiết kế chế độ nhân sự như vầy không
+thông minh lắm — mặc định ai cũng sẽ là nhân viên, ai cũng có chức năng cơ bản
+của nhân viên, còn các chức năng khác là menu, có quyền là thấy thêm menu chức
+năng."* Đúng, và nó xoá luôn ba thứ rườm rà mà §12.7 dựng lên:
+
+| Trước (§12.7) | Sau |
+| --- | --- |
+| Hai thanh dock: dock nhân viên 5 tab + dock nhân sự 4 tab | **Một dock duy nhất** (5 tab nhân viên) cho mọi người |
+| Nút "Chế độ nhân sự" / "Về chế độ nhân viên" ở `/profile` | Không còn vào/ra chế độ nào cả |
+| `/admin` là Trung tâm lưới thẻ + `/admin/profile` là bản sao hồ sơ | `/admin` chuyển hướng về `/profile`; **trang Cá nhân CHÍNH LÀ menu** |
+
+Lý do sâu hơn: người đứng quầy **vẫn là nhân viên** và vẫn phải tự đăng ký cơm
+cho mình. Dựng một "chế độ" là dựng bức tường giữa hai việc của cùng một người,
+lại phải nuôi hai thanh điều hướng, một màn Trung tâm chỉ để liệt kê link, và
+một bản sao trang hồ sơ.
+
+- `src/lib/staff-menu.ts` (mới) — **nguồn duy nhất** của danh sách việc theo
+  quyền (`STAFF_MENU`, `staffMenuFor(staff)`). Thêm việc mới = thêm một dòng ở
+  đây, không phải sắp lại thanh điều hướng.
+- `src/pages/profile/index.tsx` — nhóm đầu **"Việc được giao"** hiện đúng những
+  dòng tài khoản có quyền; không có quyền nào thì trang này y hệt của mọi nhân
+  viên. Bỏ hẳn nút chuyển chế độ.
+- `src/components/footer.tsx` — xoá `ADMIN_TABS` và cả nhánh dock thứ hai.
+- `src/router.tsx` — mọi `/admin/*` chuyển sang `handle: { back: true }` (màn con
+  mở ra từ menu, có nút quay lại), `/admin` → `<Navigate to="/profile">`, bỏ
+  `/admin/profile`. Xoá `src/pages/admin/hub.tsx`.
+- Sáu màn `/admin/*` — `onBack` nay đều về `/profile` (menu), và đáy vùng cuộn
+  giảm từ `+112px` xuống `+24px` vì màn con không có dock che.
+
+### 12.9.2. Cấp thẻ tạm (§12.5)
+
+Việc này hợp điện thoại hơn hẳn web: người cấp **đang đứng cạnh** người quên thẻ,
+cầm thẻ nhựa trong tay — quét tại chỗ thay vì chạy về máy tính gõ mã.
+
+**Quyền: `temp-card-issue:view` cho CẢ đọc lẫn ghi** — bám theo route web đang
+chạy (`/api/pickup/temporary-cards` gác đúng quyền này ở cả GET và POST), **không**
+bám `pickup:assign-temp-card` trong bảng đăng ký quyền: bảng có khai nhưng route
+không dùng. Gác khác đi là cấp quyền lệch với web.
+
+**Không đưa lên Mini App:** `bulkCreateTemporaryCards` (nhập kho thẻ hàng loạt) —
+đúng ranh giới §12.5.
+
+#### BFF (`../tanloc-spartronics`) — đã viết, tsc + eslint sạch, CHƯA deploy
+
+- `src/modules/zma/types.ts` + `zma-employee.service.ts` — cờ thứ 8 `canTempCard`
+  = `checkPermission(session, "temp-card-issue", "view")`.
+- `src/modules/zma/services/zma-temp-card.service.ts` (mới) — lớp **chiếu** mỏng:
+  luật (thẻ phải có trong kho, thẻ đang kích hoạt thì không cấp lại, hạn +1 giờ,
+  `kind` = `employee` / `extra:new_worker` / `extra:guest`) nằm nguyên ở
+  `modules/pickup/temporary-card.service`. Ở đây chỉ đổi snake_case và **cắt cột
+  nội bộ** (`assigned_by` là id tài khoản web, `employee_id`, `id`).
+- `GET/POST /api/zma/staff/temp-card` (mới) — GET `?q=` tra nhân viên,
+  POST cấp thẻ (`mode: "employee" | "extra"`). `TemporaryCardError` → **400 kèm
+  `error`** (kết quả nghiệp vụ, không phải sự cố hệ thống).
+
+#### ZMA (`goeat-zma`)
+
+- `src/api/types.ts` — `StaffAccess.canTempCard`; `TempCard`,
+  `TempCardIssueInput`, `TempCardIssueResult`.
+- `src/api/temp-card.ts` (mới) — ô tra cứu nhân viên đi **đường riêng**
+  `/temp-card?q=`, không dùng `searchStaffEmployees`: người trực quầy thường chỉ
+  có `temp-card-issue:view`, gọi đường nhân sự sẽ ăn 403 dù đủ quyền làm việc này.
+- `src/api/mock/temp-card.mock.ts` (mới) — kho 12 thẻ `TC-0001…TC-0012` giữ trong
+  localStorage, **có hậu quả thật**: cấp xong mà cấp lại ngay thì bị từ chối đúng
+  câu của server. Mock cấp được vô hạn thì lỗi chỉ lộ ra ở nhà máy.
+- `src/pages/admin/temp-card.tsx` (mới) — hai chế độ tách hẳn: **Nhân viên quên
+  thẻ** (tra người → quét/nhập mã thẻ → cấp, xong thì tự bỏ chọn người để không
+  cấp nhầm thẻ thứ hai) và **Suất phát sinh** (CN mới / khách, ghi chú + bộ phận,
+  quét từng thẻ *hoặc* lấy nhanh N thẻ trong kho — có mã quét thì ô số lượng tự
+  tắt). Hạn thẻ **do server trả về**, màn hình không tự cộng giờ.
+- `src/components/admin/employee-picker.tsx` — thêm prop `search` để đổi **đường**
+  tra cứu (không đổi kết quả).
+- `src/components/staff-guard.tsx`, `src/api/mock/ordering.mock.ts` — nhãn quyền
+  và cờ mock.
+
+### Kiểm chứng (mock, Playwright, `localhost:2999`)
+
+`npx tsc --noEmit` sạch ở cả hai repo, `eslint` sạch ở BFF, 0 lỗi console.
+
+- `/profile` hiện nhóm "Việc được giao" 7 dòng, dock nhân viên vẫn ở dưới; `/admin`
+  chuyển hướng về `/profile`; `/admin/scan` có nút quay lại, không còn dock.
+- Cấp cho NV: chọn Trần Thị Bích → `TC-0003` → "Đã cấp thẻ tạm TC-0003",
+  hết hạn **12:35** (đồng hồ 11:35 + 1 giờ), màn tự về ô tra cứu.
+- Khách / đoàn, số lượng 3 → cấp `TC-0001`, `TC-0002`, **`TC-0004`** — tự bỏ qua
+  `TC-0003` vì đang kích hoạt, đúng thứ tự kho.
+- Cấp `TC-0001` (đang kích hoạt) cho người khác → bị từ chối, danh sách "Thẻ đã
+  cấp" không tăng.
+
+---
+
+## §12.10 — Làm lại THIẾT KẾ nhóm màn quầy / bếp / nhân sự (2026-09-09)
+
+Người dùng: *"Cái thiết kế của bạn đang khá là xấu và không logic đấy — có skill
+nào tham khảo để cải thiện phong cách thiết kế này không?"* và *"Việc được giao
+là cái gì? tại sao có chức năng này nữa?"*
+
+Đã cài plugin chính thức `frontend-design@claude-plugins-official` và làm theo
+quy trình hai lượt của skill (lập bảng token → soi lại xem có rơi vào mặc định
+không → dựng → tự phê bằng ảnh chụp). Ghi chép thiết kế: `docs/design-notes-staff.md`.
+
+### 12.10.1 — "Việc được giao" là nhãn BỊA, đã bỏ
+
+Không phải chức năng, chỉ là tiêu đề nhóm cho 7 màn có sẵn. Nó gợi ý một hộp thư
+công việc mà app không có. Thay bằng hai nhóm theo VAI THẬT:
+
+| Nhóm | Quyền |
+|---|---|
+| **Quầy cơm** | `canScan` · `canTempCard` · `canManual` · `canKitchen` |
+| **Nhân sự** | `canProxy` · `canRegView` · `canReport` |
+
+`src/lib/staff-menu.ts` thêm trường `group` + `staffGroupsFor()`; nhóm rỗng bị bỏ
+hẳn nên người chỉ có một vai chỉ thấy một nhóm.
+
+### 12.10.2 — Bảng lỗi (soi theo danh sách "dấu hiệu AI sinh" của skill)
+
+| Dấu hiệu | Chỗ mắc | Đã sửa |
+|---|---|---|
+| Nhãn IN HOA giãn chữ | `VIỆC ĐƯỢC GIAO` · `TÀI KHOẢN` · `KHÁC` · eyebrow `CẤP THẺ TẠM CHO` trong `TargetBanner` | chữ thường, cỡ đọc được |
+| Chuỗi meta nối bằng dấu chấm giữa | `SP04821 · Công nhân vận hành`, `mã · bộ phận` ở picker / proxy / registrations / scan / manual | tách bằng khoảng trắng, hoặc bỏ hẳn vế thừa |
+| Bộ "thẻ SaaS" | 7 dòng y hệt nhau, cùng bo góc, cùng một bóng đổ | 1 khối đậm + lưới ô nét mảnh |
+| Nhãn thừa trên nội dung | mô tả 2 dòng dưới MỌI dòng menu | chỉ còn 2 dòng thật khó đoán (`Phát ngoại lệ`, `Sửa đăng ký`) |
+| Cấu trúc không mang tin | icon cùng màu, kích thước bằng nhau | kích thước = nhịp dùng; đồng hồ ca đứng cạnh nhóm Quầy |
+| Chế độ trong màn | nút gạt `Nhân viên quên thẻ / Suất phát sinh` | bỏ; mở thẳng vào ô tra cứu, đường phát sinh là MỘT dòng ở dưới |
+| Màu không có lý do | chip `--gold-bright` giữa app xanh rừng | về trục xanh (`--fd-wd-slot` + viền đậm) |
+
+### 12.10.3 — Nguyên tắc mới (kiểm được bằng ảnh chụp)
+
+1. **Một màn, một chỗ đậm.** Đúng một khối nền đặc + bóng đổ. Vì thế
+   `TargetBanner` đổi sang nền NHẠT: nó là bối cảnh, không phải nút bấm — để nền
+   xanh đặc thì nó chồng lên nút Quét ngay dưới thành một mảng xanh.
+2. **Kích thước = nhịp dùng.** Việc đầu của nhóm đầu tiên là khối lớn; còn lại là
+   ô 2 cột; ô LẺ cuối trải ngang cho hết chỗ trống.
+3. Không IN HOA, không dấu chấm giữa trong chuỗi meta, không "CHỮ — mảnh vụn".
+
+### 12.10.4 — File đụng tới
+
+- **Mới:** `src/lib/serving-now.ts` (`servingNow` — ca đang phát / ca kế tiếp,
+  dùng lại `shift-window.ts`, không tự cộng phút), `docs/design-notes-staff.md`.
+- **Sửa:** `src/lib/staff-menu.ts` (nhóm + `hint` thay `desc`),
+  `src/pages/profile/index.tsx` (viết lại phần việc + phần hồ sơ),
+  `src/components/admin/employee-picker.tsx` (`bare`, bỏ eyebrow IN HOA, banner
+  nền nhạt), `src/pages/admin/temp-card.tsx` (bỏ nút gạt, bỏ vàng),
+  `src/pages/admin/{proxy,registrations,scan,manual}.tsx` (chuỗi meta).
+
+### 12.10.5 — Đã kiểm bằng trình duyệt (đồng hồ 11:35, 2026-09-09)
+
+- `/profile`: một khối xanh duy nhất (Quét thẻ), nhóm Quầy cơm kèm `Ca 1 đang phát`,
+  nhóm Nhân sự, rồi danh sách tài khoản im lặng.
+- `/admin/temp-card`: mở thẳng vào "Ai cần thẻ?"; chọn người → banner nhạt + khối
+  quét; cấp `TC-0003` → dòng tổng kết `TC-0003 · Nhân viên · hết hạn 12:35`, đầu màn
+  đổi thành "Phiên này đã cấp 1 thẻ"; đường phát sinh mở ra như bước tiếp, không còn vàng.
+- `/admin/proxy`: banner nhạt không còn tranh chỗ với thẻ ngày.
+- `npx tsc --noEmit` sạch.
+
+### 12.10.6 — Ba màn còn lại: bếp, phát ngoại lệ, báo cáo
+
+Ba màn này lúc đầu mới sửa chuỗi meta. Nay làm lại bố cục theo đúng ba nguyên tắc
+ở 12.10.3:
+
+| Màn | Trước | Sau |
+|---|---|---|
+| `/admin/kitchen` | ba ca = ba thẻ y hệt, ca đang phát chìm giữa hai ca chưa tới; số lớn là `registered` | `LeadShift` (ca đang mở, khối đặc duy nhất) + `QuietShift` (chỉ nét và mực). Số lớn đổi theo câu hỏi thật: đang phát ⇒ **suất chưa nhận**, chưa tới giờ ⇒ **suất cần nấu**. Tổng cả ngày rời tiêu đề, xuống chân trang (mỗi số in một lần) |
+| `/admin/manual` | cặp chip "Nhân viên / Suất phát sinh" ở đầu màn = dựng lại đúng cái "chế độ" vừa bỏ | mở thẳng vào "Ai nhận suất?" dùng `EmployeePicker` (thêm `scan`, `placeholder`); đường phát sinh là MỘT dòng nét đứt ở dưới. Chip chọn đổi sang nền nhạt, nút "Phát suất ngoại lệ" là chỗ đặc duy nhất |
+| `/admin/report` | bốn số xếp lưới bốn ô bằng nhau nên phép tính biến mất; ba tông vàng cảnh báo cho số bình thường | dạng SỔ: mỗi số một dòng, vạch kẻ đúng chỗ phép tính khép lại (`Dự trù − Loại trừ = Thực nấu = Đã phát + Chưa nhận`). Bỏ hết tông vàng khỏi dòng thường; ca chưa mở quầy viết `92 suất` chứ không `0/92` |
+
+Thẻ kết quả của `/admin/scan` và `/admin/manual` gộp thành
+`src/components/admin/dispense-result.tsx` (`LatestResult` + `ResultLog`) — hết
+trùng mã, hết biến thể `--gold-bright`, và lịch sử hiện dạng **dòng sổ**
+(`giờ · tên · kết quả`) đúng cách người đứng quầy dò lại.
+
+### 12.10.7 — BA TRỤC MÀU (trả lời "đơn điệu một màu xanh")
+
+Bản trên tô mọi thứ về xanh thương hiệu + đen trên trắng. Sai: `src/css/tokens.css`
+đã khai sẵn ba trục, và trang đặt món (bản đã duyệt) đang dùng cả ba. Màu ở đây để
+**mang tin**, không phải trang trí — mỗi trục trả lời một câu hỏi khác nhau:
+
+| Trục | Token | Nghĩa |
+|---|---|---|
+| **Loại món** | `--fd-cat-{man,nuoc,chay,sub,khac}-ink` | mặn đỏ gạch · canh hổ phách · chay xanh · thay thế xám |
+| **Loại ngày** | `--fd-cal-ink` · `--fd-sat-ink` · `--fd-sun-ink` | ngày thường · thứ Bảy · Chủ nhật |
+| **Nhấn** | `--fd-accent-{ink,tint,solid}` | "hôm nay / đang diễn ra" |
+
+Đã kéo vào:
+
+- `src/lib/dish-tone.ts` (mới) — cầu nối sang `dishLook()` của trang đặt món **mà
+  không sửa `src/components/ordering/*`**. Bảng bếp không trả về tên cột thực đơn
+  nên món chay ở đó rơi hết vào nhóm "khác"; thêm hai biểu thức tên món
+  (`VEG` / `MEAT`) là đủ cho suất ăn nhà máy — có thịt cá thì vẫn là món mặn dù
+  kèm rau ("gà rô ti + bắp cải xào").
+- Hình món mang mực loại món ở: dòng món bảng bếp, dòng món báo cáo, chip chọn
+  món màn phát ngoại lệ.
+- Dải ngày `/admin/report`: số ngày lấy mực theo loại ngày; ô hôm nay dùng
+  `--fd-accent-tint` + viền `--fd-accent-solid`.
+- `/profile`: nhãn `Ca 1 đang phát` đổi sang trục NHẤN (viên nền cam nhạt) — nó là
+  TRẠNG THÁI, để xanh thì lẫn vào nút bấm ngay dưới. Ô việc nhóm **Nhân sự** lấy
+  mực lịch (`--fd-cal-ink`) vì cả ba màn đó đều bắt đầu bằng "chọn ngày"; nhóm
+  Quầy cơm giữ xanh phục vụ. Nhìn màu là biết mình đi về đâu.
+
+`--gold-*` vẫn KHÔNG dùng ở nhóm màn này; cần hổ phách nghĩa cảnh báo thì dùng
+`--warning-*`.
+
+### 12.10.8 — Đã kiểm lại bằng trình duyệt (đồng hồ 11:35, 2026-09-09)
+
+- `/admin/kitchen`: `Ca 1` khối xanh đặc `159 suất chưa nhận`; `Ca 2` / `Ca 3` chỉ
+  nét; bốn dòng món ba màu (mặn đỏ gạch ×3, chay xanh ×1 — "Đậu hũ sốt nấm + su su
+  luộc" đúng màu chay sau khi thêm `VEG`).
+- `/admin/report`: dải ngày CN đỏ / ngày thường nâu đất; sổ ngày khép ở
+  `Bếp phải ra 340`; chi tiết món đủ bốn mực (Mặn 1, Mặn 2, Món thay thế xám, Chay xanh).
+- `/admin/manual`: chọn `Lê Minh Tuấn` → banner nhạt, 4 chip món đủ bốn mực, nút phát
+  là khối đặc duy nhất.
+- `/admin/scan`: khối quét xanh + kết quả xanh nhạt + sổ lượt trước (`Không tìm thấy NV`
+  đỏ, `Đã nhận rồi` hổ phách) — ba tông kết quả đọc được ngay.
+- `/profile`: viên `Ca 1 đang phát` cam, ô Nhân sự mực nâu đất.
+- `npx tsc --noEmit` sạch.
+
+### 12.10.9 — "Vẫn một màu, chưa ấn tượng": lỗi ở LUẬT, không ở màu
+
+Người dùng xem xong 12.10.7 vẫn nói *"thiết kế nó vẫn 1 màu chưa có gì ấn tượng
+lắm"*. Đúng, và nguyên nhân là chính cái luật tôi đặt ra ở 12.10.3: **"một màn
+một chỗ đậm" + bỏ bộ thẻ ⇒ mọi màn thành MỘT KHỐI XANH TRÊN NỀN TRẮNG.** Thêm
+mực loại món vào hình 17px không cứu được, vì 90% diện tích màn vẫn là trắng và
+đen.
+
+Soi lại trang đặt món (bản đã duyệt) thì thấy nó giàu KHÔNG phải nhờ nền, mà nhờ
+**vật thể có chất liệu**:
+
+| Thứ | Trang đặt món làm gì | Nhóm màn quầy/bếp trước đó |
+|---|---|---|
+| Hoa văn chấm | `.ge-daycard::before`, chấm xanh 28% ở góc thẻ | không có |
+| Tờ lịch | `.ge-daynum` — gáy đất nung + hai lỗ đóng gáy | số ngày trần |
+| Dải ngày | tô CẢ VIÊN theo loại ngày (nền, viền, nhãn, số) | chỉ tô con số |
+| Trạng thái đã chọn | khung nét đứt + nền pha `--gold` 12% | xanh, hoặc không có |
+| Hình món | lồng trong vòng tròn pha 14% mực loại món | hình trần trên nền trắng |
+| Thẻ | vẫn dùng thẻ, viền xanh + bóng ngả xanh | đã dọn sạch thẻ |
+
+Tức là tôi dọn "bộ thẻ SaaS" quá tay: cái sai của bản cũ là **bảy thẻ giống hệt
+nhau**, không phải bản thân cái thẻ. Sửa lại:
+
+- **`src/css/app.scss`** thêm class MỚI `.ge-dots` (chép kết cấu chấm của
+  `.ge-daycard::before`, điều khiển bằng `--ge-dot-ink` / `--ge-dot-alpha`).
+  `.ge-daycard` giữ nguyên — trang đặt món không đụng tới.
+- **`src/lib/day-look.ts`** (mới) — `dayLook(ymd, on, today)` trả về nguyên bộ
+  nền/viền/nhãn/số/bóng của dải ngày trang đặt món. Dải ngày `/admin/report` dùng
+  hàm này nên T7 ra kem hổ phách, CN ra hồng ruby, hôm nay ra cam đất nung — thay
+  vì bảy ô trắng chỉ khác nhau màu chữ số.
+- **`src/components/admin/day-leaf.tsx`** (mới) — tờ lịch `.ge-daynum` + thứ, đặt
+  đầu `/admin/kitchen` và `/admin/report`. Hai màn nhiều số nhất cần một mốc ấm
+  để mắt bám; tiêu đề màn thôi lặp lại ngày (mỗi thứ chỉ nói một lần).
+- Khối đậm của bốn màn (`kitchen` ca chính, `report` số ngày, `scan` khối quét,
+  `profile` việc chính) mang `.ge-dots` ⇒ là một MẶT, không phải mảng màu phẳng.
+- Thẻ quay lại nhưng KHÔNG giống nhau: ca của `report`/`kitchen` là thẻ trắng
+  viền + bóng + chấm, còn sổ của ca đang phát thì DÍNH LIỀN dưới khối xanh
+  (`marginTop: -14`, bo góc dưới) — cùng một phép tính thì không tách hai mặt.
+- Món phát đủ ở bảng bếp dùng viên `--gold` pha 14% (ngôn ngữ "đã chọn" của trang
+  đặt món) thay cho chữ xanh — đây là chỗ duy nhất `--gold` được dùng lại ở nhóm
+  màn này, và nó có nghĩa: **xong**.
+- Hình trong ô việc `/profile` lồng trong ô bo 34px pha 13% mực của nhóm ⇒ nhóm
+  Quầy ra bạc hà, nhóm Nhân sự ra đất nung, nhìn phát biết ngay hai họ việc.
+
+Đã kiểm bằng trình duyệt (11:35, 2026-09-09): `/admin/report`, `/admin/kitchen`,
+`/profile`, `/admin/scan` — và `/weekly` không đổi một điểm ảnh nào (`.ge-dots`
+là class mới, trang đó đếm được 0 phần tử dùng nó; `.ge-daycard` vẫn trắng, viền
+`#8FD3B0`, bóng xanh y như cũ). `npx tsc --noEmit` sạch.
+
+**Chưa làm:** trang chủ vẫn chưa có khối việc (đề xuất cũ, chưa được duyệt).

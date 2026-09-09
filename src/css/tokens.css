@@ -185,9 +185,9 @@
   --ge-sage: #f8faf8;
   --ge-sage-line: var(--fd-wd-line);
 
-  /* Header xanh thương hiệu — Emerald tươi mát, sang trọng */
-  --ge-header: radial-gradient(120% 90% at 88% 0%, #168a5c 0%, #0d593b 62%, #09402a 100%);
-  --ge-header-deep: linear-gradient(180deg, #09402a 0%, #0d5438 45%, #147952 100%);
+  /* Header xanh thương hiệu — Gradient chéo từ dưới lên trên (Bottom-to-Top Diagonal) sang trọng */
+  --ge-header: linear-gradient(35deg, #052619 0%, #093C27 24%, #0E5638 52%, #15744D 80%, #1B9463 100%);
+  --ge-header-deep: linear-gradient(30deg, #041F14 0%, #073120 28%, #0B482F 60%, #116241 100%);
   --ge-glass: rgba(255, 255, 255, 0.18);
   --ge-glass-line: rgba(255, 255, 255, 0.26);
   --ge-on-header: rgba(255, 255, 255, 0.85);

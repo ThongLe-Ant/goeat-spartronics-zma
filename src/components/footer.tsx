@@ -24,11 +24,9 @@ const EMP_TABS: Tab[] = [
   { id: "profile", label: "Cá nhân", icon: "user", path: "/profile" },
 ];
 
-const ADMIN_TABS: Tab[] = [
-  { id: "s-scan", label: "Quét thẻ", icon: "scan", path: "/admin/scan" },
-  { id: "s-kitchen", label: "Bếp", icon: "bowl", path: "/admin/kitchen" },
-  { id: "s-profile", label: "Cá nhân", icon: "user", path: "/admin/profile" },
-];
+// MỘT thanh điều hướng duy nhất cho mọi người. Việc của quầy / bếp / nhân sự
+// KHÔNG có dock riêng: chúng là dòng menu trong trang Cá nhân (`src/lib/staff-menu.ts`)
+// và mở ra như màn con có nút quay lại. Thêm việc mới không phải sắp lại dock.
 
 /** Tạo đường path SVG cho thanh dock có vết khuyết chữ U uốn cong mượt mà ở giữa */
 function getNotchedDockPath(w: number, h = 62, r = 24) {
@@ -93,96 +91,10 @@ export default function Footer() {
   }, []);
 
   if (!handle.nav) return null;
-  const isAdmin = handle.nav === "admin";
-  const tabs = isAdmin ? ADMIN_TABS : EMP_TABS;
   const isActive = (path: string) =>
-    path === "/" || path === "/admin"
-      ? pathname === path
-      : pathname === path || pathname.startsWith(path + "/");
+    path === "/" ? pathname === path : pathname === path || pathname.startsWith(path + "/");
 
   const isQrActive = pathname === "/qr";
-
-  // Render Admin nav (không có center QR, dock dạng pill tròn chuẩn)
-  if (isAdmin) {
-    return (
-      <nav
-        aria-label="Thanh điều hướng quản trị"
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          padding: "6px 16px calc(var(--safe-bottom) + 8px)",
-          background: "transparent",
-          pointerEvents: "none",
-        }}
-      >
-        <div
-          style={{
-            pointerEvents: "auto",
-            height: 60,
-            borderRadius: 24,
-            background: "#ffffff",
-            border: "none",
-            boxShadow: "0 10px 24px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-around",
-            padding: "0 8px",
-          }}
-        >
-          {ADMIN_TABS.map((t) => {
-            const Ico = I[t.icon];
-            const on = isActive(t.path);
-            const isPressed = pressedId === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => navigate(t.path)}
-                onPointerDown={() => setPressedId(t.id)}
-                onPointerUp={() => setPressedId(null)}
-                onPointerLeave={() => setPressedId(null)}
-                style={{
-                  flex: 1,
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 2,
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "4px 0",
-                  color: on ? "#14724c" : "#94a3b8",
-                  transform: isPressed ? "scale(0.92)" : "scale(1)",
-                  transition: "all 160ms ease",
-                  WebkitTapHighlightColor: "transparent",
-                }}
-              >
-                <Ico size={22} sw={on ? 2.35 : 1.85} />
-                <span style={{ fontSize: 10, fontWeight: on ? 750 : 550, color: on ? "#14724c" : "#94a3b8" }}>
-                  {t.label}
-                </span>
-                <span
-                  style={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: 999,
-                    background: on ? "#14724c" : "transparent",
-                    marginTop: 2,
-                    transition: "background 160ms ease",
-                  }}
-                />
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-    );
-  }
 
   // Phân chia tab Nhân viên: 2 tab bên trái, nút QR ở giữa, 2 tab bên phải
   const leftTabs = EMP_TABS.slice(0, 2);
@@ -212,7 +124,24 @@ export default function Footer() {
           pointerEvents: "auto",
         }}
       >
-        {/* Nền SVG U-Notch có vết khuyết cong mượt mà — Thuần trắng, KHÔNG có viền xám bao quanh */}
+        {/* Lớp kính mờ iOS (Frosted Glass) với clip-path theo vết khuyết chữ U */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: 62,
+            clipPath: "url(#dock-clip)",
+            WebkitClipPath: "url(#dock-clip)",
+            background: "linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(255, 255, 255, 0.68) 100%)",
+            backdropFilter: "blur(24px) saturate(190%)",
+            WebkitBackdropFilter: "blur(24px) saturate(190%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Nền SVG U-Notch — Gradient kính trong suốt + Viền phản chiếu ánh sáng specular kiểu iOS */}
         <svg
           width={dockWidth}
           height={62}
@@ -225,18 +154,32 @@ export default function Footer() {
             width: "100%",
             height: 62,
             pointerEvents: "none",
-            filter: "drop-shadow(0 10px 24px rgba(15, 23, 42, 0.08)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.03))",
+            filter: "drop-shadow(0 12px 28px rgba(15, 23, 42, 0.10)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.03))",
           }}
         >
-          {/* Thân dock màu trắng tinh khiết, viền trong suốt */}
+          <defs>
+            <clipPath id="dock-clip">
+              <path d={getNotchedDockPath(dockWidth, 62, 24)} />
+            </clipPath>
+            <linearGradient id="dock-glass-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.82)" />
+              <stop offset="100%" stopColor="rgba(255, 255, 255, 0.65)" />
+            </linearGradient>
+            <linearGradient id="dock-border-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.95)" />
+              <stop offset="45%" stopColor="rgba(255, 255, 255, 0.68)" />
+              <stop offset="100%" stopColor="rgba(255, 255, 255, 0.35)" />
+            </linearGradient>
+          </defs>
           <path
             d={getNotchedDockPath(dockWidth, 62, 24)}
-            fill="#ffffff"
-            stroke="none"
+            fill="url(#dock-glass-grad)"
+            stroke="url(#dock-border-grad)"
+            strokeWidth="1.2"
           />
         </svg>
 
-        {/* Nút QR tròn nổi bật đặt chính giữa vết lõm chữ U */}
+        {/* Nút QR tròn nổi bật đặt chính giữa vết lõm chữ U — Viền kính trắng tinh tế & bóng nổi */}
         <button
           type="button"
           onClick={() => navigate("/qr")}
@@ -256,14 +199,14 @@ export default function Footer() {
               ? "linear-gradient(145deg, #0e6342 0%, #073a24 100%)"
               : "linear-gradient(145deg, #189865 0%, #116b48 100%)",
             color: "#ffffff",
-            border: "none",
+            border: "2px solid rgba(255, 255, 255, 0.85)",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             boxShadow: isQrActive
-              ? "0 8px 22px rgba(14, 99, 66, 0.5)"
-              : "0 8px 20px -2px rgba(20, 114, 76, 0.42), 0 3px 8px rgba(0, 0, 0, 0.08)",
+              ? "0 8px 24px rgba(14, 99, 66, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.45)"
+              : "0 8px 20px -2px rgba(20, 114, 76, 0.42), 0 3px 8px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.45)",
             transition: "transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 180ms ease, background 180ms ease",
             zIndex: 10,
             WebkitTapHighlightColor: "transparent",
@@ -326,7 +269,7 @@ export default function Footer() {
                     border: "none",
                     cursor: "pointer",
                     padding: "4px 0",
-                    color: on ? "#14724c" : "#94a3b8",
+                    color: on ? "#14724c" : "#64748b",
                     transform: isPressed ? "scale(0.92)" : "scale(1)",
                     transition: "all 160ms ease",
                     WebkitTapHighlightColor: "transparent",
@@ -340,7 +283,7 @@ export default function Footer() {
                       lineHeight: 1,
                       letterSpacing: "-0.01em",
                       whiteSpace: "nowrap",
-                      color: on ? "#14724c" : "#94a3b8",
+                      color: on ? "#14724c" : "#64748b",
                     }}
                   >
                     {t.label}
@@ -389,7 +332,7 @@ export default function Footer() {
                     border: "none",
                     cursor: "pointer",
                     padding: "4px 0",
-                    color: on ? "#14724c" : "#94a3b8",
+                    color: on ? "#14724c" : "#64748b",
                     transform: isPressed ? "scale(0.92)" : "scale(1)",
                     transition: "all 160ms ease",
                     WebkitTapHighlightColor: "transparent",
@@ -403,7 +346,7 @@ export default function Footer() {
                       lineHeight: 1,
                       letterSpacing: "-0.01em",
                       whiteSpace: "nowrap",
-                      color: on ? "#14724c" : "#94a3b8",
+                      color: on ? "#14724c" : "#64748b",
                     }}
                   >
                     {t.label}

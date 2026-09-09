@@ -11,6 +11,11 @@ import EditProfilePage from "@/pages/profile/edit";
 
 import ScanPage from "@/pages/admin/scan";
 import KitchenPage from "@/pages/admin/kitchen";
+import ManualPage from "@/pages/admin/manual";
+import TempCardPage from "@/pages/admin/temp-card";
+import ProxyPage from "@/pages/admin/proxy";
+import RegistrationsPage from "@/pages/admin/registrations";
+import ReportPage from "@/pages/admin/report";
 
 import NotFound from "@/pages/404";
 
@@ -29,11 +34,18 @@ const router = createBrowserRouter(
         { path: "/profile", element: <ProfilePage />, handle: { nav: "emp" } },
         { path: "/profile/edit", element: <EditProfilePage />, handle: { back: true } },
 
-        // ── Quầy phát / bếp (nhân sự có quyền pickup:*) ──
-        { path: "/admin", element: <Navigate to="/admin/scan" replace /> },
-        { path: "/admin/scan", element: <ScanPage />, handle: { nav: "admin" } },
-        { path: "/admin/kitchen", element: <KitchenPage />, handle: { nav: "admin" } },
-        { path: "/admin/profile", element: <ProfilePage />, handle: { nav: "admin" } },
+        // ── Việc theo quyền (quầy / bếp / nhân sự) ──
+        // KHÔNG phải một "chế độ" riêng: đây là màn con mở ra từ dòng menu ở
+        // trang Cá nhân (`src/lib/staff-menu.ts`), nên `back: true` — không dock
+        // thứ hai, không Trung tâm, không phải vào/ra chế độ nào cả.
+        { path: "/admin", element: <Navigate to="/profile" replace /> },
+        { path: "/admin/scan", element: <ScanPage />, handle: { back: true } },
+        { path: "/admin/kitchen", element: <KitchenPage />, handle: { back: true } },
+        { path: "/admin/manual", element: <ManualPage />, handle: { back: true } },
+        { path: "/admin/temp-card", element: <TempCardPage />, handle: { back: true } },
+        { path: "/admin/proxy", element: <ProxyPage />, handle: { back: true } },
+        { path: "/admin/registrations", element: <RegistrationsPage />, handle: { back: true } },
+        { path: "/admin/report", element: <ReportPage />, handle: { back: true } },
 
         { path: "*", element: <NotFound /> },
       ],

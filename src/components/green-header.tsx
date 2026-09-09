@@ -25,6 +25,7 @@ export function GreenHeader({
   deep = false,
   wave = true,
   pad = 12,
+  tall = false,
 }: {
   children: ReactNode;
   /** Màu nền trang bên dưới — gợn sóng phải cùng màu mới liền mạch. */
@@ -33,7 +34,12 @@ export function GreenHeader({
   deep?: boolean;
   wave?: boolean;
   pad?: number;
+  /** Kéo dải nền và sóng xuống sâu hơn đáng kể (cho Trang chủ). */
+  tall?: boolean;
 }) {
+  const waveH = tall ? 136 : 90;
+  const bottomPad = wave ? pad + (tall ? 130 : 76) : pad;
+
   return (
     <div
       style={{
@@ -51,8 +57,8 @@ export function GreenHeader({
           position: "absolute",
           top: -15,
           right: -15,
-          width: 200,
-          height: 200,
+          width: tall ? 250 : 200,
+          height: tall ? 250 : 200,
           pointerEvents: "none",
           backgroundImage:
             "radial-gradient(circle at center, rgba(255, 255, 255, 0.35) 1.5px, transparent 1.6px)",
@@ -65,12 +71,25 @@ export function GreenHeader({
         }}
       />
 
-      {/* Chừa chỗ bên phải cho capsule của Zalo (nút … / thoát) và đệm chừa độ lượn sóng chìm dưới nội dung */}
+      {/* Lớp ánh sáng chéo từ dưới lên trên (Bottom-to-Top Diagonal Sheen) tạo chiều sâu quang học */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(42deg, rgba(0, 0, 0, 0.25) 0%, transparent 42%, rgba(255, 255, 255, 0.10) 78%, rgba(226, 186, 93, 0.15) 100%)",
+          pointerEvents: "none",
+          zIndex: 1,
+        }}
+      />
+
+      {/* Chừa chỗ bên phải cho capsule của Zalo (nút … / thoát) và đệm chừa độ lượn sóng chìm sâu dưới nội dung */}
       <div
         style={{
           position: "relative",
           zIndex: 2,
-          padding: `calc(max(var(--safe-top, 0px), 38px) + 8px) 16px ${wave ? pad + 38 : pad}px`,
+          padding: `calc(max(var(--safe-top, 0px), 38px) + 8px) 16px ${bottomPad}px`,
         }}
       >
         {children}
@@ -78,7 +97,7 @@ export function GreenHeader({
 
       {wave && (
         <svg
-          viewBox="0 0 390 54"
+          viewBox={`0 0 390 ${waveH}`}
           preserveAspectRatio="none"
           aria-hidden
           style={{
@@ -88,19 +107,27 @@ export function GreenHeader({
             right: 0,
             bottom: -1,
             width: "100%",
-            height: 54,
+            height: waveH,
             pointerEvents: "none",
             zIndex: 1,
           }}
         >
-          {/* Lớp sóng mờ tạo hiệu ứng khúc xạ chiều sâu sang trọng */}
+          {/* Lớp viền phản chiếu khúc xạ ánh sáng theo đường chữ S sâu */}
           <path
-            d="M 0 8 C 75 38, 155 46, 235 22 C 295 6, 350 10, 390 32 L 390 54 L 0 54 Z"
+            d={
+              tall
+                ? "M 0 91 C 65 122, 130 122, 195 58 C 260 0, 325 0, 390 12 L 390 136 L 0 136 Z"
+                : "M 0 60 C 65 80, 130 80, 195 38 C 260 2, 325 2, 390 8 L 390 90 L 0 90 Z"
+            }
             fill="rgba(255, 255, 255, 0.09)"
           />
-          {/* Lớp sóng chính uốn lượn uyển chuyển hoà vào nền trang */}
+          {/* Đường lượn chữ S sâu, võng mạnh từ trái qua phải vút cao lên trên */}
           <path
-            d="M 0 16 C 70 46, 150 54, 230 30 C 290 12, 345 16, 390 40 L 390 54 L 0 54 Z"
+            d={
+              tall
+                ? "M 0 105 C 65 136, 130 136, 195 72 C 260 8, 325 8, 390 22 L 390 136 L 0 136 Z"
+                : "M 0 70 C 65 90, 130 90, 195 48 C 260 6, 325 6, 390 15 L 390 90 L 0 90 Z"
+            }
             fill={waveFill}
           />
         </svg>

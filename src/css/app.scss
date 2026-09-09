@@ -246,3 +246,32 @@ button {
     animation: none;
   }
 }
+
+/* Hoa văn chấm cho khối đậm của nhóm màn quầy/bếp — cùng kết cấu với
+   `.ge-daycard::before` của trang đặt món, tách riêng để khối nào cần thì gọi.
+   `--ge-dot-ink` là mực chấm (trên nền xanh đặc thì để trắng). */
+.ge-dots {
+  position: relative;
+  overflow: hidden;
+}
+.ge-dots::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -34px;
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--ge-dot-ink, var(--fd-wd-ink)) var(--ge-dot-alpha, 26%), transparent) 1.6px,
+    transparent 1.7px
+  );
+  background-size: 13px 13px;
+  -webkit-mask-image: radial-gradient(circle at 70% 30%, #000 0%, rgba(0, 0, 0, 0.4) 48%, transparent 74%);
+  mask-image: radial-gradient(circle at 70% 30%, #000 0%, rgba(0, 0, 0, 0.4) 48%, transparent 74%);
+}
+.ge-dots > * {
+  position: relative;
+  z-index: 1;
+}

@@ -89,17 +89,17 @@ export function DayCard({
         flexDirection: "column",
         background: "var(--fd-wd-card)",
         border: day.isToday
-          ? "1.5px solid var(--fd-wd-solid)"
+          ? "1px solid #8FD3B0"
           : kind === "sat"
-          ? "1.5px solid color-mix(in srgb, var(--fd-sat-ink) 35%, var(--fd-wd-line))"
+          ? "1px solid #E9CE78"
           : kind === "sun"
-          ? "1.5px solid color-mix(in srgb, var(--fd-sun-solid) 35%, var(--fd-wd-line))"
-          : "1px solid var(--fd-wd-line)",
+          ? "1px solid #FECDD3"
+          : "1px solid #E2E8F0",
         borderRadius: 20,
         padding: "14px 14px 12px",
         boxShadow: day.isToday
-          ? "inset 0 0 0 2px var(--fd-wd-solid), 0 10px 24px -16px color-mix(in srgb, var(--fd-wd-solid) 60%, transparent)"
-          : "0 1px 2px rgba(24, 20, 14, 0.05), 0 10px 22px -16px rgba(24, 20, 14, 0.3)",
+          ? "0 4px 18px -3px rgba(20, 114, 76, 0.12), 0 1px 3px rgba(0, 0, 0, 0.03)"
+          : "0 2px 10px -2px rgba(24, 20, 14, 0.05), 0 1px 3px rgba(24, 20, 14, 0.03)",
       }}
     >
       <header style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>

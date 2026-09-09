@@ -71,7 +71,7 @@ export function DishSlot({
     textAlign: "left",
     padding: "8px 10px",
     borderRadius: 14,
-    border: isNone ? "2px dashed var(--fg-4)" : isChosen ? "2px dashed var(--gold)" : "2px solid transparent",
+    border: isNone ? "1.5px dashed var(--fg-4)" : isChosen ? "1.5px dashed var(--gold)" : "1.5px solid transparent",
     background: isChosen ? "var(--bg-surface)" : "transparent",
     boxShadow: isChosen ? "0 1px 3px rgba(0, 0, 0, 0.04)" : "none",
     transition: "background 160ms var(--ease-out), border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out)",

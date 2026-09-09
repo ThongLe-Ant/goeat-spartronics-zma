@@ -17,7 +17,7 @@ import type {
 import { addDays, dayKind, hmToMin, mondayOf, weekdayIndex, ymdVN } from "@/lib/date-vn";
 import { isLockedAt, lockClock, lockLeadDays } from "@/lib/ordering-lock";
 
-const DEADLINE_HOURS = 48;
+export const DEADLINE_HOURS = 48;
 const PICKUP_MINUTES = 15;
 const FUTURE_HORIZON_DAYS = 14;
 
@@ -42,7 +42,7 @@ export const MEAL_TIMES = [
 /** Ca nào NV này có tên trong danh sách nhà máy: Ca 1 = ca chính, Ca 2 = tăng ca. */
 const ROSTER: Record<number, Entitlement> = { 1: "main", 2: "ot", 3: "none" };
 
-const SHIFTS: WeeklyShift[] = MEAL_TIMES.map((mt) => {
+export const SHIFTS: WeeklyShift[] = MEAL_TIMES.map((mt) => {
   const cutoff_time = lockClock(DEADLINE_HOURS, mt);
   const cutoff_days = lockLeadDays(DEADLINE_HOURS, mt);
   return { id: mt.id, name: mt.name, start_time: mt.start_time, end_time: mt.end_time, cutoff_time, cutoff_days, cutoff_label: `${DEADLINE_HOURS} tiếng trước giờ ăn` };
@@ -100,6 +100,25 @@ export function save() {
   }
 }
 
+/**
+ * Kho đơn của NGƯỜI KHÁC — chỉ dùng khi nhân sự đặt hộ / sửa đăng ký.
+ * Cố ý KHÔNG ghi localStorage: đơn mock của đồng nghiệp không đáng chiếm chỗ
+ * lưu của máy, và mỗi lần mở lại app nhân sự thấy dữ liệu sạch để thử.
+ */
+const proxyStores: Record<number, Record<string, StoredOrder>> = {};
+
+/** Kho đơn của một nhân viên: chính mình thì là kho thật, người khác thì kho phiên. */
+export function storeOf(employeeId: number): Record<string, StoredOrder> {
+  if (employeeId === MOCK_EMPLOYEE.id) return load();
+  if (!proxyStores[employeeId]) proxyStores[employeeId] = {};
+  return proxyStores[employeeId];
+}
+
+/** Ghi xuống đĩa nếu là kho của chính mình; kho người khác chỉ sống trong phiên. */
+export function saveOf(employeeId: number) {
+  if (employeeId === MOCK_EMPLOYEE.id) save();
+}
+
 /** Đơn mẫu: các ngày làm việc đã qua trong tuần này đã ăn Ca 1 (combo Mặn 1). */
 function seed(): Record<string, StoredOrder> {
   const today = ymdVN();
@@ -120,11 +139,10 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // ---- API ---------------------------------------------------------------------
 export async function mockBootstrap(): Promise<Bootstrap> {
   await delay(120);
-  return { employee: MOCK_EMPLOYEE, config: { tenant: "spartronics", hidePrice: true, deadlineHours: DEADLINE_HOURS, futureHorizonDays: FUTURE_HORIZON_DAYS }, staff: { canScan: true, canKitchen: true } };
+  return { employee: MOCK_EMPLOYEE, config: { tenant: "spartronics", hidePrice: true, deadlineHours: DEADLINE_HOURS, futureHorizonDays: FUTURE_HORIZON_DAYS }, staff: { canScan: true, canKitchen: true, canManual: true, canProxy: true, canRegView: true, canRegEdit: true, canReport: true, canTempCard: true } };
 }
 
-function buildDay(date: string, today: string, now: number): WeeklyDay {
-  const orders = load();
+function buildDay(date: string, today: string, now: number, orders: Record<string, StoredOrder>): WeeklyDay {
   const past = date < today;
   const hasMenu = dayKind(date) !== "sun";
   const menus: WeeklyDay["menus"] = {};
@@ -144,23 +162,24 @@ function buildDay(date: string, today: string, now: number): WeeklyDay {
   return { date, weekday: wdVN, isToday: date === today, isLocked: MEAL_TIMES.every((mt) => lockedShifts[mt.id]), lockedShifts, menus, orders: dayOrders, entitlements };
 }
 
-export async function mockWeekMenu(): Promise<WeeklyMenuData> {
+export async function mockWeekMenu(employeeId: number = MOCK_EMPLOYEE.id): Promise<WeeklyMenuData> {
   await delay(180);
   const now = Date.now();
   const today = ymdVN();
   const mon = mondayOf(today);
+  const orders = storeOf(employeeId);
   const week = (start: string) =>
-    Array.from({ length: 7 }, (_, i) => buildDay(addDays(start, i), today, now)).filter(
+    Array.from({ length: 7 }, (_, i) => buildDay(addDays(start, i), today, now, orders)).filter(
       (d) => dayKind(d.date) !== "sun" || Object.keys(d.menus).length > 0 || Object.keys(d.orders).length > 0,
     );
   return { shifts: SHIFTS, thisWeek: week(mon), nextWeek: week(addDays(mon, 7)), allowOrderingThisWeek: true };
 }
 
-export async function mockBatchOrder(input: BatchOrderInput): Promise<BatchOrderResult> {
+export async function mockBatchOrder(input: BatchOrderInput, employeeId: number = MOCK_EMPLOYEE.id): Promise<BatchOrderResult> {
   await delay(260);
   const now = Date.now();
   const today = ymdVN();
-  const orders = load();
+  const orders = storeOf(employeeId);
   const horizon = addDays(today, FUTURE_HORIZON_DAYS);
   const noPortion: BatchOrderResult["noPortion"] = [];
 
@@ -192,7 +211,7 @@ export async function mockBatchOrder(input: BatchOrderInput): Promise<BatchOrder
     const ent: Entitlement = otherShifts.length === 0 ? "main" : "ot";
     orders[key(o.meal_date, o.meal_time_id)] = { menu_line_id: o.menu_line_id, entitlement: ent };
   }
-  save();
+  saveOf(employeeId);
   return { message: "Đã lưu", noPortion };
 }
 

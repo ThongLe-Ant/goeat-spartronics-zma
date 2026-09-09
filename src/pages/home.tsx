@@ -132,7 +132,7 @@ export default function HomePage() {
   return (
     <div style={{ height: "100%", overflowY: "auto", background: "var(--ge-sage)" }} className="no-scrollbar">
       {/* 1. Chào + Thẻ nhân viên trên header xanh thương hiệu */}
-      <GreenHeader>
+      <GreenHeader tall>
         <div style={{ display: "flex", alignItems: "center", gap: 12, paddingRight: 96 }}>
           <AppImg
             src={emp?.avatar_url ?? ""}
@@ -172,15 +172,15 @@ export default function HomePage() {
       </GreenHeader>
 
       {status === "loading" && !data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px 28px" }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -78, padding: "0 16px 28px" }}>
           <LoadingBlock rows={3} />
         </div>
       ) : status === "error" && !data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px 28px" }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -78, padding: "0 16px 28px" }}>
           <ErrorBlock message={error ?? "Không tải được thực đơn"} onRetry={() => reload()} />
         </div>
       ) : data ? (
-        <div style={{ position: "relative", zIndex: 2, marginTop: -34, padding: "0 16px calc(var(--safe-bottom) + 112px)", display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ position: "relative", zIndex: 2, marginTop: -78, padding: "0 16px calc(var(--safe-bottom) + 112px)", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* 2. TẤM VÉ SUẤT ĂN HÔM NAY (Digital Meal Pass) */}
           <section>
             <div
@@ -192,45 +192,48 @@ export default function HomePage() {
                 boxShadow: "0 14px 34px -6px rgba(10, 45, 30, 0.18), 0 3px 10px rgba(0, 0, 0, 0.04)",
               }}
             >
-              {/* Dải tiêu đề vé — Phong cách Boarding Pass hạng sang với huy hiệu vàng kim Spartronics */}
+              {/* Dải tiêu đề vé — Nền Trắng Sứ cao cấp, viền tinh tế, tương phản tuyệt đối trên nền xanh */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "12px 16px",
-                  background: "linear-gradient(135deg, #093321 0%, #0F4D33 100%)",
-                  color: "#ffffff",
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                  padding: "14px 18px",
+                  background: "#ffffff",
+                  borderBottom: "1px solid #F1F5F9",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span
                     style={{
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      width: 26,
-                      height: 26,
-                      borderRadius: 8,
-                      background: "rgba(226, 186, 93, 0.16)",
+                      width: 32,
+                      height: 32,
+                      borderRadius: 10,
+                      background: "linear-gradient(135deg, #0D4D33 0%, #176544 100%)",
                       color: "#E2BA5D",
-                      border: "1px solid rgba(226, 186, 93, 0.35)",
+                      boxShadow: "0 2px 6px rgba(13, 77, 51, 0.22)",
+                      flexShrink: 0,
                     }}
                   >
-                    <I.utensils size={14} sw={2.2} />
+                    <I.utensils size={16} sw={2.2} />
                   </span>
                   <div>
-                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase", color: "#E2BA5D" }}>
-                      SPARTRONICS MEAL PASS
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 13.5, letterSpacing: "0.03em", textTransform: "uppercase", color: "#0F172A" }}>
+                      THẺ SUẤT ĂN HÔM NAY
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", letterSpacing: "0.06em", textTransform: "uppercase", marginTop: 1 }}>
+                      SPARTRONICS VIỆT NAM
                     </div>
                   </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div className="tnum" style={{ fontSize: 12, fontWeight: 700, color: "#ffffff" }}>
+                  <div className="tnum" style={{ fontSize: 13, fontWeight: 800, color: "#0D4D33" }}>
                     {weekdayFullVN(today)}
                   </div>
-                  <div className="tnum" style={{ fontSize: 10.5, fontWeight: 500, color: "rgba(255, 255, 255, 0.75)", marginTop: 1 }}>
+                  <div className="tnum" style={{ fontSize: 11, fontWeight: 600, color: "#64748B", marginTop: 1 }}>
                     {dayMonth(today)}
                   </div>
                 </div>
