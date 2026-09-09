@@ -192,39 +192,48 @@ export default function HomePage() {
                 boxShadow: "0 14px 34px -6px rgba(10, 45, 30, 0.18), 0 3px 10px rgba(0, 0, 0, 0.04)",
               }}
             >
-              {/* Dải tiêu đề thẻ — Trắng sứ tinh khiết chuẩn luxury pass */}
+              {/* Dải tiêu đề vé — Phong cách Boarding Pass hạng sang với huy hiệu vàng kim Spartronics */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 10,
-                  padding: "13px 16px",
-                  background: "#ffffff",
-                  borderBottom: "1px solid #F1F5F9",
+                  justifyContent: "space-between",
+                  padding: "12px 16px",
+                  background: "linear-gradient(135deg, #093321 0%, #0F4D33 100%)",
+                  color: "#ffffff",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
                 }}
               >
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 30,
-                    height: 30,
-                    borderRadius: 9,
-                    background: "linear-gradient(135deg, #0D4D33 0%, #176544 100%)",
-                    color: "#E2BA5D",
-                    flexShrink: 0,
-                    boxShadow: "0 2px 6px rgba(13, 77, 51, 0.25)",
-                  }}
-                >
-                  <I.utensils size={15} sw={2.2} />
-                </span>
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 15, letterSpacing: "-0.015em", color: "#0F172A" }}>
-                  Suất ăn hôm nay
-                </span>
-                <span className="tnum" style={{ marginLeft: "auto", fontSize: 12, fontWeight: 600, color: "#64748B" }}>
-                  {weekdayFullVN(today)} · {dayMonth(today)}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 26,
+                      height: 26,
+                      borderRadius: 8,
+                      background: "rgba(226, 186, 93, 0.16)",
+                      color: "#E2BA5D",
+                      border: "1px solid rgba(226, 186, 93, 0.35)",
+                    }}
+                  >
+                    <I.utensils size={14} sw={2.2} />
+                  </span>
+                  <div>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase", color: "#E2BA5D" }}>
+                      SPARTRONICS MEAL PASS
+                    </div>
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div className="tnum" style={{ fontSize: 12, fontWeight: 700, color: "#ffffff" }}>
+                    {weekdayFullVN(today)}
+                  </div>
+                  <div className="tnum" style={{ fontSize: 10.5, fontWeight: 500, color: "rgba(255, 255, 255, 0.75)", marginTop: 1 }}>
+                    {dayMonth(today)}
+                  </div>
+                </div>
               </div>
 
               <div style={{ padding: 14 }}>
@@ -438,6 +447,48 @@ export default function HomePage() {
                           </div>
                         ) : (
                           <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                            {/* Đường xé vé điện tử (Ticket Notch & Perforation) */}
+                            <div
+                              style={{
+                                position: "relative",
+                                margin: "4px -14px 6px",
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              {/* Khuyết vé tròn bên trái */}
+                              <div
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: "0 999px 999px 0",
+                                  background: "var(--ge-sage)",
+                                  boxShadow: "inset -2px 0 3px rgba(0, 0, 0, 0.08)",
+                                  flexShrink: 0,
+                                }}
+                              />
+                              {/* Đường đục lỗ xé vé */}
+                              <div
+                                style={{
+                                  flex: 1,
+                                  height: 0,
+                                  borderTop: "1.5px dashed #CBD5E1",
+                                  margin: "0 8px",
+                                }}
+                              />
+                              {/* Khuyết vé tròn bên phải */}
+                              <div
+                                style={{
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: "999px 0 0 999px",
+                                  background: "var(--ge-sage)",
+                                  boxShadow: "inset 2px 0 3px rgba(0, 0, 0, 0.08)",
+                                  flexShrink: 0,
+                                }}
+                              />
+                            </div>
+
                             {/* Khung Mini QR chạm để mở toàn màn hình */}
                             <div
                               onClick={() => navigate("/qr")}

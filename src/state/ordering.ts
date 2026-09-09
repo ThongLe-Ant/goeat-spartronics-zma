@@ -6,6 +6,7 @@ import { useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import { batchOrder, fetchBootstrap, fetchWeekMenu } from "@/api/ordering";
 import type { Bootstrap, OrderingFoodItem, WeeklyDay, WeeklyMenuData, WeeklyShift } from "@/api/types";
+import { addDays } from "@/lib/date-vn";
 
 export const cellKey = (date: string, shiftId: number) => `${date}|${shiftId}`;
 
@@ -29,6 +30,11 @@ const enqueue = <T,>(fn: () => Promise<T>) => {
   writeQueue = p.catch(() => undefined);
   return p;
 };
+
+/** Mốc chốt đăng ký của một ô (epoch ms, giờ VN +07:00 không DST). */
+function lockAtMs(date: string, s: WeeklyShift): number {
+  return Date.parse(`${addDays(date, -s.cutoff_days)}T${s.cutoff_time.padStart(5, "0")}:00+07:00`);
+}
 
 /** Tìm ngày trong cả hai tuần. */
 function patchDay(data: WeeklyMenuData, date: string, fn: (d: WeeklyDay) => WeeklyDay): WeeklyMenuData {
@@ -79,6 +85,26 @@ export function useWeekMenu() {
   useEffect(() => {
     if (status === "idle") void load();
   }, [status, load]);
+
+  // Giờ chốt trôi qua trong lúc NV vẫn đang mở màn hình: hẹn giờ nạp lại đúng
+  // mốc chốt gần nhất để ô tự khoá, thay vì chỉ báo lỗi khi chạm vào món.
+  useEffect(() => {
+    if (!data) return;
+    const now = Date.now();
+    let next = Infinity;
+    for (const d of [...data.thisWeek, ...data.nextWeek]) {
+      if (d.isLocked) continue;
+      for (const s of data.shifts) {
+        if (d.lockedShifts[s.id]) continue;
+        const at = lockAtMs(d.date, s);
+        if (at > now && at < next) next = at;
+      }
+    }
+    if (!Number.isFinite(next)) return;
+    // Chốt xa nhất chỉ vài ngày nên không chạm trần ~24.8 ngày của setTimeout.
+    const t = setTimeout(() => void load(true), next - now + 1500);
+    return () => clearTimeout(t);
+  }, [data, load]);
 
   const isCellLocked = useCallback((day: WeeklyDay, shiftId: number) => day.isLocked || !!day.lockedShifts[shiftId], []);
   const pickedOf = useCallback((day: WeeklyDay, shiftId: number): number | undefined => day.orders[shiftId], []);

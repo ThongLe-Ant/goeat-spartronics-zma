@@ -4,13 +4,15 @@
 import type { KitchenBoard, KitchenShift, ScanOutcome, ScanServed } from "../types";
 import { MEAL_TIMES, MOCK_EMPLOYEE, dishesFor, effectiveOrder, key, load, save } from "./ordering.mock";
 import { hmToMin, hmVN, weekdayIndex, ymdVN } from "@/lib/date-vn";
+import { endMin, isServing, nowMinFor, startMin } from "@/lib/shift-window";
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const PICKUP_MINUTES = 15;
 
 type Mt = (typeof MEAL_TIMES)[number];
 const serveWindow = (mt: Mt) => `${mt.start_time}–${mt.end_time}`;
-const isOpen = (mt: Mt, nowMin: number) => nowMin >= hmToMin(mt.start_time) - PICKUP_MINUTES && nowMin <= hmToMin(mt.end_time);
+// Ca có thể vắt qua nửa đêm — để shift-window lo phần cộng 1440.
+const isOpen = (mt: Mt, nowMin: number) => isServing(mt, nowMin, PICKUP_MINUTES);
 
 /**
  * Ca đang mở cửa phát; ngoài giờ, mock lấy ca kế tiếp trong ngày (hoặc ca cuối)
@@ -76,8 +78,10 @@ export async function mockKitchenBoard(): Promise<KitchenBoard> {
   const shifts: KitchenShift[] = MEAL_TIMES.map((mt) => {
     const dishes = dishesFor(today, mt.id).map((d, i) => {
       const registered = BASE[mt.id][i] + ((wd * 7 + i * 3) % 5);
-      const endMin = hmToMin(mt.end_time);
-      const pct = nowMin > endMin ? 0.97 : isOpen(mt, nowMin) ? Math.min(0.95, (nowMin - hmToMin(mt.start_time) + PICKUP_MINUTES) / (endMin - hmToMin(mt.start_time) + PICKUP_MINUTES)) : 0;
+      const from = startMin(mt) - PICKUP_MINUTES;
+      const to = endMin(mt);
+      const t = nowMinFor(mt, nowMin, PICKUP_MINUTES);
+      const pct = t > to ? 0.97 : isOpen(mt, nowMin) ? Math.min(0.95, (t - from) / (to - from)) : 0;
       return { name: d.name, registered, picked_up: Math.round(registered * pct) };
     });
     // Cộng suất của chính NV mẫu để thao tác đặt món / quét thẻ thấy được số nhảy.

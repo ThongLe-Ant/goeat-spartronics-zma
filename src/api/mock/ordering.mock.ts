@@ -212,12 +212,15 @@ export function effectiveOrder(date: string, shiftId: number): StoredOrder | nul
   const dish = autoDish(dishesFor(date, shiftId));
   return dish ? { menu_line_id: dish.menu_line_id, entitlement: ROSTER[shiftId] } : null;
 }
-const minToHm = (min: number) => `${String(Math.floor(((min % 1440) + 1440) % 1440 / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
+/** Phút ➝ "HH:mm"; chuẩn hoá về [0,1440) trước khi chia để mốc âm (mở quầy trước 00:00) không ra "23:-15". */
+const minToHm = (min: number) => {
+  const m = (((min % 1440) + 1440) % 1440);
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+};
 
 export async function mockPickupCard(): Promise<PickupCardData> {
   await delay(150);
   const today = ymdVN();
-  const orders = load();
   const meals: PickupCardData["meals"] = [];
   for (const mt of MEAL_TIMES) {
     const o = effectiveOrder(today, mt.id);

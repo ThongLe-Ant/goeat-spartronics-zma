@@ -564,3 +564,57 @@ chiếu BFF — `tanloc-spartronics/src/app/api/zma/bootstrap/route.ts` trả
   của màn `/qr` — lỗi thiết kế, chưa đụng vì tệp đang được sửa song song.
 
 Ảnh: `.playwright-mcp/fix-{qr,scan-dup,orders2,adminprofile,weekly-persist}.png`.
+
+## 11.5 Dọn nốt 3 khoản nợ 2026-09-09
+
+| Khoản nợ (§11.4) | Kết quả |
+| --- | --- |
+| Dock nav trong suốt chìm trên `/qr` | **Không còn** — bản `footer.tsx` hiện tại vẽ thân dock bằng SVG `fill="#ffffff"` có `drop-shadow`, nổi rõ trên nền xanh. Chỉ lớp `<nav>` bao ngoài là trong suốt (cố ý, để nền trang lộ ra quanh dock). Ảnh: `scratchpad/dock_qr.png`. |
+| Ca vắt qua nửa đêm | **Đã sửa** — thêm `src/lib/shift-window.ts`. |
+| UI không tự khoá khi qua giờ chốt | **Đã sửa** — hẹn giờ nạp lại trong `useWeekMenu`. |
+
+### Ca vắt qua nửa đêm — `src/lib/shift-window.ts` (mới)
+
+Quy ước: `end_time <= start_time` ⇒ ca kết thúc sang ngày hôm sau. Mọi so sánh
+quy về phút và cộng 1440 cho mốc kết thúc, thay cho so chuỗi `"HH:mm"` (so chuỗi
+cho kết quả **ngược** với ca 23:00–00:30).
+
+- `crossesMidnight` / `startMin` / `endMin` / `openMin`
+- `nowMinFor(mt, nowMin, pickup)` — quy giờ hiện tại về cùng trục với ca
+- `isServing(mt, nowMin, pickup)` — quầy có đang mở phát không
+- `shiftEndMs(ymd, mt)` — epoch ms lúc ca kết thúc (tự nhảy sang `ymd+1`)
+
+Áp vào `staff.mock.ts`: `isOpen` gọi `isServing`; công thức `pct` của bảng bếp
+dùng `nowMinFor`/`endMin` thay vì `hmToMin(end_time)`. Với 3 ca hiện tại kết quả
+không đổi (đã đối chiếu: 11:35 → Ca 1 217 suất / đã phát 58, y như trước).
+
+`mealStartMs` trong `ordering-lock.ts` **giữ nguyên** — giờ bắt đầu luôn nằm trên
+chính ngày ăn, không có gì sai; chỉ mốc *kết thúc* mới cần cộng ngày.
+
+Nhân tiện sửa `minToHm` trong `ordering.mock.ts`: chuẩn hoá về `[0,1440)` **trước**
+khi chia, nếu không mốc mở quầy âm (ca bắt đầu ngay sau 00:00) ra `"23:-15"`.
+
+Kiểm chứng (`npx tsx`), ca 23:00–00:30 mở quầy trước 15':
+
+```
+endMin = 1470            22:40 ✗   22:50 ✓   23:10 ✓   23:59 ✓
+shiftEndMs → 10/09 00:30  00:10 ✓   00:29 ✓   00:40 ✗   12:00 ✗
+```
+
+### Tự khoá khi qua giờ chốt — `src/state/ordering.ts`
+
+`lockAtMs(date, shift)` = `addDays(date, -cutoff_days)` lúc `cutoff_time` (+07:00).
+`useWeekMenu` thêm một effect: quét mọi ô **chưa khoá** của cả hai tuần, lấy mốc
+chốt gần nhất còn ở tương lai, `setTimeout` tới đó rồi `load(true)` (nạp im lặng).
+Mỗi lần `data` đổi thì effect chạy lại và hẹn mốc kế tiếp; không có vòng lặp vì
+mốc đã qua bị loại bởi điều kiện `at > now`.
+
+Kiểm chứng bằng `page.clock.install` tại **09/09 11:29**, mở `/weekly`, chọn ngày
+T6 11/09 (Ca 1 chốt 11:30 hôm nay), **không chạm gì cả**, chạy đồng hồ tới 11:30:
+
+- trước: `… Cá nục kho | Mặc định | Thịt xá xíu | Chọn | Gà kho sả | Chọn …`
+- sau:  `… Ca 1 đã hết hạn đổi món — chốt 11:30 trước 2 ngày. Còn Ca 2, Ca 3 đổi được. …`
+  (các nút **Chọn** biến mất)
+
+Hồi quy: `npx tsc --noEmit` sạch; 8 route (`/`, `/weekly`, `/orders`, `/qr`,
+`/profile`, `/admin/{scan,kitchen,profile}`) render đủ, **0 lỗi console**.
