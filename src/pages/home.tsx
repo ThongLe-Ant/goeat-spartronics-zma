@@ -492,7 +492,7 @@ export default function HomePage() {
                               />
                             </div>
 
-                            {/* Khung Mini QR chạm để mở toàn màn hình */}
+                            {/* Cuống vé QR nhận cơm — Chạm để phóng to toàn màn hình (Hợp nhất 1 nơi duy nhất, loại bỏ nút thừa) */}
                             <div
                               onClick={() => navigate("/qr")}
                               role="button"
@@ -500,12 +500,13 @@ export default function HomePage() {
                               style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: 14,
+                                gap: 12,
                                 padding: "12px 14px",
                                 borderRadius: 16,
                                 background: "#F8FAFC",
                                 border: "1px solid #E2E8F0",
                                 cursor: "pointer",
+                                transition: "all 140ms ease",
                               }}
                             >
                               <div
@@ -518,46 +519,38 @@ export default function HomePage() {
                                   flexShrink: 0,
                                 }}
                               >
-                                <QRCode value={qrScanValue} size={64} fg="#0D4D33" />
+                                <QRCode value={qrScanValue} size={62} fg="#0D4D33" />
                               </div>
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0F172A", display: "flex", alignItems: "center", gap: 4 }}>
-                                  Mã nhận cơm tại quầy <I.chevR size={14} style={{ color: "#64748B" }} />
+                                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#0F172A", display: "flex", alignItems: "center", gap: 5 }}>
+                                  Mã nhận cơm tại quầy
                                 </div>
                                 <div className="tnum" style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
                                   Mã NV: <strong style={{ color: "#0F172A" }}>{emp?.employee_code ?? "—"}</strong>
                                 </div>
-                                <div style={{ fontSize: 11.5, color: "#0D4D33", fontWeight: 700, marginTop: 3 }}>
-                                  Chạm để mở mã QR lớn
+                                <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>
+                                  Đưa mã khi đến quầy hoặc quẹt thẻ
                                 </div>
                               </div>
+                              <div
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  padding: "8px 13px",
+                                  borderRadius: 999,
+                                  background: "linear-gradient(135deg, #0D4D33 0%, #15734C 100%)",
+                                  color: "#ffffff",
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  flexShrink: 0,
+                                  boxShadow: "0 3px 10px rgba(13, 77, 51, 0.22)",
+                                }}
+                              >
+                                <I.qr size={14} sw={2.2} />
+                                <span>Phóng to</span>
+                              </div>
                             </div>
-
-                            {/* Nút chính */}
-                            <button
-                              type="button"
-                              onClick={() => navigate("/qr")}
-                              style={{
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 8,
-                                padding: "13px 16px",
-                                borderRadius: 14,
-                                border: "none",
-                                cursor: "pointer",
-                                font: "inherit",
-                                fontWeight: 700,
-                                fontSize: 14.5,
-                                background: "linear-gradient(180deg, #136943 0%, #0A452B 100%)",
-                                color: "#ffffff",
-                                boxShadow: "0 6px 18px -3px rgba(10, 69, 43, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
-                              }}
-                            >
-                              <I.qr size={18} sw={2.2} />
-                              Mở mã QR nhận cơm
-                            </button>
                           </div>
                         )}
                       </>
